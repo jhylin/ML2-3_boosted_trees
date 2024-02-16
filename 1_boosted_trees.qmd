@@ -1,0 +1,19 @@
+---
+title: "Boosted trees"
+subtitle: "Series 2.3 - LightGBM or XGBoost"
+author: Jennifer HY Lin
+date: '2024-2-16'
+draft: false
+categories: 
+    - Machine learning projects
+    - Tree models
+    - Pandas
+    - Scikit-learn
+    - RDKit
+    - ChEMBL database
+    - Python
+jupyter: python3
+format: html
+bibliography: references.bib
+---
+
