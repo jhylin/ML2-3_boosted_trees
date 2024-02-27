@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3 - LightGBM or XGBoost"
 author: Jennifer HY Lin
-date: '2024-2-25'
+date: '2024-2-27'
 draft: false
 categories: 
     - Machine learning projects
@@ -19,6 +19,9 @@ bibliography: references.bib
 
 *Planning stage*
 
-Dataset ?new - Biogen (ADMET data) or ChEMBL via chembl_downloader with ?GPCR as target
+Dataset 
+- Biogen (ADMET data) 
+- activity cliff paper
+- ChEMBL via chembl_downloader with ?GPCR as target (very wide, need to narrow down?)
 
 LightGBM (scikit-learn has built-in functions) or XGBoost 
