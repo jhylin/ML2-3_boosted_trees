@@ -1,6 +1,6 @@
 ---
 title: "Boosted trees"
-subtitle: "Series 2.3 - LightGBM or XGBoost"
+subtitle: "Series 2.3"
 author: Jennifer HY Lin
 date: '2024-2-28'
 draft: false
@@ -17,19 +17,19 @@ format: html
 bibliography: references.bib
 ---
 
-*Planning stage*
+*Planning stage - Feb 2024*
 
-Dataset 
+Datasets 
 - Biogen (ADMET data) 
 - activity cliff paper
 - ChEMBL via chembl_downloader with ?GPCR as target (very wide, need to narrow down)
 
-*LightGBM*
+*LightGBM* (separate post)
 Scikit-learn has built-in functions
 * Histogram-based gradient boosting
 - Mainly inspired by LightGBM
 - Supports missing values and categorical data
-- HistGradientBoostingClassifier() or regressor - best for sample size larger than tens of thousands
-- GradientBoostingClassifier() or regressor - for small sample size e.g. less than tens of thousands
+- HistGradientBoostingClassifier() or regressor - best for sample size > tens of thousands
+- GradientBoostingClassifier() or regressor - for small sample size e.g. < tens of thousands
 
-*XGBoost*
+*XGBoost* (separate post)
