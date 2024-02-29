@@ -24,6 +24,9 @@ Datasets
 - activity cliff paper
 - ChEMBL via chembl_downloader with ?GPCR as target (very wide, need to narrow down)
 
+*AdaBoost*
+?starting post
+
 *LightGBM* (separate post)
 Scikit-learn has built-in functions
 * Histogram-based gradient boosting
