@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3"
 author: Jennifer HY Lin
-date: '2024-2-28'
+date: '2024-3-13'
 draft: false
 categories: 
     - Machine learning projects
@@ -17,17 +17,24 @@ format: html
 bibliography: references.bib
 ---
 
-*Planning stage - Feb 2024*
+*Planning stage - Feb - Mar 2024*
 
-Datasets 
-- Biogen (ADMET data) 
-- activity cliff paper
-- ChEMBL via chembl_downloader with ?GPCR as target (very wide, need to narrow down)
+*Datasets*
+Options:
+* ChEMBL via chembl_downloader with ?GPCR as target (very wide, need to narrow down)
+- Biogen (ADMET data) or activity cliff paper
 
-*AdaBoost*
-?starting post
+*AdaBoost* (1st post)
+First introduced in 1995 (Y. Freund, and R. Schapire, “A Decision-Theoretic Generalization of On-Line Learning and an Application to Boosting”, 1997.)
 
-*LightGBM* (separate post)
+Parameters: 
+n_estimators (number of weak learners)
+learning_rate (contributions of weak learners in the final combination)
+max_depth (depth)
+min_samples_split (minimum required number of samples to consider a split)
+
+
+*LightGBM* (2nd post)
 Scikit-learn has built-in functions
 * Histogram-based gradient boosting
 - Mainly inspired by LightGBM
@@ -35,4 +42,5 @@ Scikit-learn has built-in functions
 - HistGradientBoostingClassifier() or regressor - best for sample size > tens of thousands
 - GradientBoostingClassifier() or regressor - for small sample size e.g. < tens of thousands
 
-*XGBoost* (separate post)
+
+*XGBoost* (3rd post)
