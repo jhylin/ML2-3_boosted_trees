@@ -1,0 +1,33 @@
+---
+title: "Boosted trees"
+subtitle: "Series 2.3.1 - Adaptive boosting"
+author: Jennifer HY Lin
+date: '2024-3-21'
+draft: true
+categories: 
+    - Machine learning projects
+    - Tree models
+    - Pandas
+    - Scikit-learn
+    - RDKit
+    - ChEMBL database
+    - Python
+jupyter: python3
+format: html
+bibliography: references.bib
+---
+
+*AdaBoost or Adaptive Boost* (1st post)
+
+First introduced in 1995 (Y. Freund, and R. Schapire, “A Decision-Theoretic Generalization of On-Line Learning and an Application to Boosting”, 1997.)
+
+Can be used for classification or regression problems.
+
+"...fit a sequence of weak learners (i.e., models that are only slightly better than random guessing, such as small decision trees) on repeatedly modified versions of the data." (quoted from scikit-learn - https://scikit-learn.org/stable/modules/ensemble.html#adaboost)
+- Increased weights are given to incorrectly predicted samples by the AdaBoost models at each iteration. Conversely, less weights are given to the correctly predicted ones. Overall, this forces the AdaBoost model to focus more on the less accurately predicted samples. In the end, the prediction from these iterations are combined to produce a final prediction via a weighted majority vote style (signature of tree models).
+
+Parameters: 
+n_estimators (number of weak learners)
+learning_rate (contributions of weak learners in the final combination)
+max_depth (depth)
+min_samples_split (minimum required number of samples to consider a split)
