@@ -19,7 +19,8 @@ bibliography: references.bib
 
 *Planning stage - Feb - Mar 2024*
 
-*Datasets*
+
+*Datasets - searching for other ways of obtaining public drug discovery datasets (?separate post by itself)*
 Options:
 * ChEMBL via chembl_downloader with ?GPCR as target (very wide, need to narrow down)
 - Biogen (ADMET data) or activity cliff paper

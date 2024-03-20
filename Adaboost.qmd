@@ -31,3 +31,17 @@ n_estimators (number of weak learners)
 learning_rate (contributions of weak learners in the final combination)
 max_depth (depth)
 min_samples_split (minimum required number of samples to consider a split)
+
+
+```{python}
+import pandas as pd
+```
+
+```{python}
+# Reading from the previously saved file
+df_ache = pd.read_csv("chembl_d_ache_33.tsv", sep = ",")
+```
+
+```{python}
+df_ache.head()
+```
