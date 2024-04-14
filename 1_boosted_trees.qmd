@@ -1,5 +1,6 @@
 ---
 title: "Boosted trees"
+subtitle: Plan
 subtitle: "Series 2.3"
 author: Jennifer HY Lin
 date: '2024-4-15'
