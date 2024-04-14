@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3.1 - Adaptive boosting"
 author: Jennifer HY Lin
-date: '2024-3-21'
+date: '2024-4-15'
 draft: true
 categories: 
     - Machine learning projects
@@ -17,7 +17,7 @@ format: html
 bibliography: references.bib
 ---
 
-*AdaBoost or Adaptive Boost* (1st post)
+*AdaBoost or Adaptive Boost*
 
 First introduced in 1995 (Y. Freund, and R. Schapire, “A Decision-Theoretic Generalization of On-Line Learning and an Application to Boosting”, 1997.)
 

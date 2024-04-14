@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3"
 author: Jennifer HY Lin
-date: '2024-3-13'
+date: '2024-4-15'
 draft: true
 categories: 
     - Machine learning projects
@@ -17,16 +17,21 @@ format: html
 bibliography: references.bib
 ---
 
-*Planning stage - Feb - Mar 2024*
+*Planning stage - Feb - Apr 2024*
 
 
 *Datasets - searching for other ways of obtaining public drug discovery datasets (?separate post by itself)*
 Options:
-* ChEMBL via chembl_downloader with ?GPCR as target (very wide, need to narrow down)
+- ChEMBL dataset obtained previously via chembl_downloader
 - Biogen (ADMET data) or activity cliff paper
 
 
+*AdaBoost* (1st post)
+
+
 *LightGBM* (2nd post)
+* Developed by Microsoft
+
 Scikit-learn has built-in functions
 * Histogram-based gradient boosting
 - Mainly inspired by LightGBM
@@ -36,3 +41,7 @@ Scikit-learn has built-in functions
 
 
 *XGBoost* (3rd post)
+* Using stochastic gradient boosting
+* Parameters to tune: 
+- subsample - controls fraction of observations that should be sampled at each iteration
+- eta (or learning-rate in scikit-learn) - shrinkage factor applied to alpha in the boosting algorithm
