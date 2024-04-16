@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3.1 - Adaptive boosting"
 author: Jennifer HY Lin
-date: '2024-4-15'
+date: '2024-4-17'
 draft: true
 categories: 
     - Machine learning projects
@@ -33,8 +33,18 @@ max_depth (depth)
 min_samples_split (minimum required number of samples to consider a split)
 
 
+
 ```{python}
+import sys
 import pandas as pd
+import numpy as np
+
+from sklearn.ensemble import AdaBoostRegressor
+```
+
+```{python}
+# Show system info
+print(sys.version)
 ```
 
 ```{python}
@@ -43,5 +53,22 @@ df_ache = pd.read_csv("chembl_d_ache_33.tsv", sep = ",")
 ```
 
 ```{python}
+print(df_ache.shape)
 df_ache.head()
 ```
+
+```{python}
+df_ache.value_counts("max_phase")
+```
+
+```{python}
+df_ache.value_counts("pchembl_value")
+```
+
+```{python}
+df_ache[["pchembl_value"]].describe()
+```
+
+
+
+AdaBoost regressor (target: pchembl_value) or classifier (target: max_phase)
