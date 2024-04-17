@@ -17,22 +17,25 @@ format: html
 bibliography: references.bib
 ---
 
-*AdaBoost or Adaptive Boost*
+##### **Some introductions**
 
-First introduced in 1995 (Y. Freund, and R. Schapire, “A Decision-Theoretic Generalization of On-Line Learning and an Application to Boosting”, 1997.)
+Adaptive Boost is also known as AdaBoost, which has originated from Robert E. Schapire in 1990 [@schapire1990], [@mlbook2022]. This concept was further introduced in 1996 by Robert Schapire and Yoav Freund at a conference and led to another publication [@freund1997].
 
 Can be used for classification or regression problems.
 
 "...fit a sequence of weak learners (i.e., models that are only slightly better than random guessing, such as small decision trees) on repeatedly modified versions of the data." (quoted from scikit-learn - https://scikit-learn.org/stable/modules/ensemble.html#adaboost)
-- Increased weights are given to incorrectly predicted samples by the AdaBoost models at each iteration. Conversely, less weights are given to the correctly predicted ones. Overall, this forces the AdaBoost model to focus more on the less accurately predicted samples. In the end, the prediction from these iterations are combined to produce a final prediction via a weighted majority vote style (signature of tree models).
 
-Parameters: 
+-   Increased weights are given to incorrectly predicted samples by the AdaBoost models at each iteration. Conversely, less weights are given to the correctly predicted ones. Overall, this forces the AdaBoost model to focus more on the less accurately predicted samples. In the end, the prediction from these iterations are combined to produce a final prediction via a weighted majority vote style (signature of tree models).
+
+Parameters to tune:
+
 n_estimators (number of weak learners)
+
 learning_rate (contributions of weak learners in the final combination)
+
 max_depth (depth)
+
 min_samples_split (minimum required number of samples to consider a split)
-
-
 
 ```{python}
 import sys
@@ -57,6 +60,8 @@ print(df_ache.shape)
 df_ache.head()
 ```
 
+Some simple data explorations
+
 ```{python}
 df_ache.value_counts("max_phase")
 ```
@@ -69,6 +74,6 @@ df_ache.value_counts("pchembl_value")
 df_ache[["pchembl_value"]].describe()
 ```
 
-
+Decide what training data to use for targets e.g. fingerprints or RDKit 2D descriptors or others
 
 AdaBoost regressor (target: pchembl_value) or classifier (target: max_phase)
