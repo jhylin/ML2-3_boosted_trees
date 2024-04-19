@@ -43,7 +43,7 @@ Parameters to tune:
 
 ##### **Some demo**
 
-A quick demonstration or example of AdaBoost.
+A quick demonstration (a very simple example that is very likely not going to reflect real-life scenarios) of AdaBoost.
 
 ```{python}
 import sys
@@ -82,6 +82,15 @@ df_ache.value_counts("pchembl_value")
 df_ache[["pchembl_value"]].describe()
 ```
 
-Decide what training data to use for targets e.g. fingerprints or RDKit 2D descriptors or others
+Which data features to use for targets e.g. fingerprints (e.g. Morgan fingerprints best for larger dataset) or RDKit 2D descriptors (useful for smaller datasets) or others
 
-AdaBoost regressor (target: pchembl_value) or classifier (target: max_phase)
+* Useful Jupyter notebook explaining when to best use parallel calculations to calculate molecular fingerprints and descriptors - https://github.com/EBjerrum/scikit-mol/blob/main/notebooks/07_parallel_transforms.ipynb
+
+
+Likely model forming steps:
+
+* Data splitting
+* Using scikit-learn's pipeline
+- include Scikit-mol transformers
+- AdaBoost classifier (target: max_phase)
+(likely not going to use regressor which uses pchembl_value, which is the -log of published activity values e.g. IC50 - [ChEMBL database link](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/chembl-data-questions#what-is-pchembl) that explains this)
