@@ -1,8 +1,8 @@
 ---
 title: "Boosted trees"
-subtitle: "Series 2.3.1 - Adaptive boosting"
+subtitle: "Series 2.3.1 - AdaBoost and Scikit-mol"
 author: Jennifer HY Lin
-date: '2024-4-19'
+date: '2024-4-22'
 draft: true
 categories: 
     - Machine learning projects
@@ -50,7 +50,7 @@ import sys
 import pandas as pd
 import numpy as np
 
-from sklearn.ensemble import AdaBoostRegressor
+from sklearn.ensemble import AdaBoostClassifier
 ```
 
 ```{python}
@@ -61,9 +61,6 @@ print(sys.version)
 ```{python}
 # Reading from the previously saved file
 df_ache = pd.read_csv("chembl_d_ache_33.tsv", sep = ",")
-```
-
-```{python}
 print(df_ache.shape)
 df_ache.head()
 ```
@@ -75,19 +72,17 @@ df_ache.value_counts("max_phase")
 ```
 
 ```{python}
-df_ache.value_counts("pchembl_value")
-```
-
-```{python}
 df_ache[["pchembl_value"]].describe()
 ```
 
 Likely model forming steps:
 
 * Data splitting
+    - ?using ghostml approach 2 again
 
 * SMILES sanitisation and standardisation
-
+    - starting to use scikit-mol
+    
 * Convert SMILES to RDKit molecules
 ```{python}
 # Import smi2mol transformer
