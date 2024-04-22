@@ -78,7 +78,7 @@ df_ache[["pchembl_value"]].describe()
 Likely model forming steps:
 
 * Data splitting
-    - ?using ghostml approach 2 again
+    - ?using ghostml approach 2 again or just randomly splits data
 
 * SMILES sanitisation and standardisation
     - starting to use scikit-mol
