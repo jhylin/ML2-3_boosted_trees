@@ -54,8 +54,9 @@ from rdkit import Chem
 
 # Standardise molecules
 from scikit_mol.standardizer import Standardizer
-# Fingerprints
-from scikit_mol.fingerprints import MorganFingerprintTransformer, MolecularDescriptorTransformer
+# Import fingerprints & descriptors
+from scikit_mol.fingerprints import MorganFingerprintTransformer
+from scikit_mol.descriptors import MolecularDescriptorTransformer
 # Import smi2mol transformer
 from scikit_mol.conversions import SmilesToMolTransformer
 
