@@ -19,6 +19,8 @@ bibliography: references.bib
 
 ##### **Some introductions**
 
+###### **AdaBoost**
+
 Adaptive Boost or AdaBoost has originated from Robert E. Schapire in 1990 [@schapire1990], [@mlbook2022], and was further introduced in 1996 by Robert Schapire and Yoav Freund at a conference which also led to a publication [@freund1997].
 
 As quoted from [scikit-learn](https://scikit-learn.org/stable/modules/ensemble.html#adaboost), an AdaBoost algorithm is doing this:
@@ -39,6 +41,10 @@ Parameters to tune:
 
 * min_samples_split - minimum required number of samples to consider a split
 
+###### **Histogram-based gradient boosting**
+
+TBC
+
 <br>
 
 ##### **A demo**
@@ -52,12 +58,13 @@ import numpy as np
 
 from rdkit import Chem
 
-# Standardise molecules
+# Import Scikit_mol
+## Standardise molecules
 from scikit_mol.standardizer import Standardizer
-# Import fingerprints & descriptors
+## Import fingerprints & descriptors
 from scikit_mol.fingerprints import MorganFingerprintTransformer
 from scikit_mol.descriptors import MolecularDescriptorTransformer
-# Import smi2mol transformer
+## Import smi2mol transformer
 from scikit_mol.conversions import SmilesToMolTransformer
 
 from sklearn.model_selection import train_test_split
@@ -102,7 +109,7 @@ Likely model forming steps:
 
 * Data splitting - randomly splits data 
 ```{python}
-X_train, y_train, X_test, y_test = train_test_split()
+# X_train, y_train, X_test, y_test = train_test_split()
 ```
 
 * Create a pipeline using Scikit-learn
@@ -111,18 +118,24 @@ X_train, y_train, X_test, y_test = train_test_split()
 
     - using Scikit-mol transformers
 
+Links re. building pipeline in Scikit-learn:
+
+Pipeline module - https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn-pipeline-pipeline
+
+make_pipeline module (simpler pipeline construction, without naming estimators) - https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline
+
 ```{python}
-mlpipe = make_pipeline(
+# mlpipe = make_pipeline(
 
-    # Convert SMILES to RDKit molecules
-    SmilesToMolTransformer(), 
+#     # Convert SMILES to RDKit molecules
+#     SmilesToMolTransformer(), 
 
-    # Molecule standardisations
-    Standardizer(),
+#     # Molecule standardisations
+#     Standardizer(),
 
-    # RDKit2D descriptors (or MorganFingerprintTransformer() - to be decided)
-    MolecularDescriptorTransformer()
-    )
+#     # RDKit2D descriptors (or MorganFingerprintTransformer() - to be decided)
+#     MolecularDescriptorTransformer()
+#     )
 ```
 
 
