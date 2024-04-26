@@ -122,11 +122,12 @@ Links re. building pipeline in Scikit-learn:
 
 Pipeline module - https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn-pipeline-pipeline
 
-make_pipeline module (simpler pipeline construction, without naming estimators) - https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline
+make_pipeline module (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically) - https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline
 
 ```{python}
 # mlpipe = make_pipeline(
 
+#     # **Also check out molpipeline's error handling**
 #     # Convert SMILES to RDKit molecules
 #     SmilesToMolTransformer(), 
 
