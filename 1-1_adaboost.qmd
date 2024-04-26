@@ -17,6 +17,12 @@ format: html
 bibliography: references.bib
 ---
 
+##### **Quick overview**
+
+AdaBoost
+?Histogram-based gradient boosting
+A sample demo using scikit_learn's AdaBoostClassifier & scikit_mol's transformers
+
 ##### **Some introductions**
 
 ###### **AdaBoost**
@@ -59,6 +65,8 @@ import numpy as np
 from rdkit import Chem
 
 # Import Scikit_mol
+## Check and clean SMILES
+from scikit_mol.utilities import CheckSmilesSanitazion
 ## Standardise molecules
 from scikit_mol.standardizer import Standardizer
 ## Import fingerprints & descriptors
@@ -102,41 +110,48 @@ Likely model forming steps:
 
 *Another similar package, molpipeline - https://github.com/basf/MolPipeline - special feature is that it handles errors within the pipeline*
 
-* SMILES sanitisation
-    - ?using scikit-mol or Datamol (or own script)
-
 * Define X, y
+
+* SMILES sanitisation
+
+To avoid confusion, this post is likely to focus only on scikit_mol which has a different way to handle SMILES errors. Another useful way to deal with SMILES errors is molpipeline's SMILES error handling, with an example shown in one of its notebooks - https://github.com/basf/MolPipeline/blob/main/notebooks/03_error_handling.ipynb. The main difference from what I could see was that molpipeline takes into account all the invalid SMILES by giving each invalid SMILES a "nan" label in the pipeline process - this maintains the matrix shape and good for tracking down the problematic SMILES (compounds).
+
+```{python}
+checksmi = CheckSmilesSanitazion()
+
+X_valid, y_valid, X_errors, y_errors = checksmi.sanitize(X, y)
+
+# Likely using X_valid & y_valid for further work (but this also means removing the invalids or errors completely from the training dataset)
+```
 
 * Data splitting - randomly splits data 
 ```{python}
-# X_train, y_train, X_test, y_test = train_test_split()
+# X_train, y_train, X_test, y_test = train_test_split(X_valid, y_valid)
 ```
 
 * Create a pipeline using Scikit-learn
 
     - possibly chaining AdaBoostClassifier and HistGradientBoostingClassifier
-
     - using Scikit-mol transformers
 
 Links re. building pipeline in Scikit-learn:
+- Pipeline module - https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn-pipeline-pipeline
 
-Pipeline module - https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn-pipeline-pipeline
-
-make_pipeline module (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically) - https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline
+- make_pipeline module (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically) - https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline
 
 ```{python}
-# mlpipe = make_pipeline(
-
-#     # **Also check out molpipeline's error handling**
-#     # Convert SMILES to RDKit molecules
-#     SmilesToMolTransformer(), 
-
-#     # Molecule standardisations
-#     Standardizer(),
-
-#     # RDKit2D descriptors (or MorganFingerprintTransformer() - to be decided)
-#     MolecularDescriptorTransformer()
-#     )
+mlpipe = make_pipeline(
+    # Convert SMILES to RDKit molecules
+    SmilesToMolTransformer(), 
+    # Molecule standardisations
+    Standardizer(),
+    # RDKit2D descriptors (or MorganFingerprintTransformer() - to be decided)
+    MolecularDescriptorTransformer(),
+    # Adaptive boost classifier
+    # to change parameters: **param_adaboost = {max_depth = 4}
+    # AdaBoostClassifier(**param_adaboost)
+    AdaBoostClassifier()
+    )
 ```
 
 
@@ -146,3 +161,16 @@ make_pipeline module (simpler pipeline construction, without naming estimators o
 
     - AdaBoost classifier (target: max_phase)
     (likely not going to use regressor which uses pchembl_value, which is the -log of published activity values e.g. IC50 - [ChEMBL database link](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/chembl-data-questions#what-is-pchembl) that explains this)
+
+
+```{python}
+# # apply the pipeline to training data
+# mlpipe.fit(X_train, y_train)
+# # use the pipeline to predict on testing data
+# mlpipe.predict(y_test)
+```
+
+
+```{python}
+# Calculate metrics of the model
+```
