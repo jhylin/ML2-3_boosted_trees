@@ -62,6 +62,9 @@ import sys
 import pandas as pd
 import numpy as np
 
+import chembl_downloader
+from chembl_downloader import latest
+
 from rdkit import Chem
 
 # Import Scikit_mol
@@ -85,10 +88,41 @@ from sklearn.ensemble import AdaBoostClassifier
 print(sys.version)
 ```
 
+Since the latest version of ChEMBL is currently sitting at 34, and rather than repeating what I did before, what I did was to use the previously cached ChEMBL data from version 33. To see the more reproducible way to retrieve ChEMBL data, please see this post - https://jhylin.github.io/Data_in_life_blog/posts/17_ML2-2_Random_forest/2_random_forest_classifier.html#data-retrieval-using-chembl_downloader 
+
 ```{python}
 # Reading from the previously saved file
-df_ache = pd.read_csv("chembl_d_ache_33.tsv", sep = ",")
-print(df_ache.shape)
+# df_ache = pd.read_csv("chembl_d_ache_33.tsv", sep = ",")
+# print(df_ache.shape)
+# df_ache.head()
+```
+
+```{python}
+from pathlib import Path
+
+# Pick any directory, but make sure it's relative to your home directory
+directory = Path.home().joinpath(".data", "blog")
+# Create the directory if it doesn't exist
+directory.mkdir(exist_ok=True, parents=True)
+
+# Create a file path that corresponds to the previously cached ChEMBL data 
+path = directory.joinpath(f"chembl_d_ache_33.tsv")
+
+# alternative way to download latest version
+# note: need to specify late_version = latest() first
+# please see post link provided above for details
+# path = directory.joinpath(f"chembl_d_ache_{latest_version}.tsv")
+
+if path.is_file():
+    # If the file already exists, load it
+    df_ache = pd.read_csv(path, sep=',')
+else:
+    # If the file doesn't already exist, make the query then cache it
+    df_ache = chembl_downloader.query(sql)
+    df_ache.to_csv(path, sep=",", index=False)
+```
+
+```{python}
 df_ache.head()
 ```
 
