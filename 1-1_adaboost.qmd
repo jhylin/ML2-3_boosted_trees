@@ -61,9 +61,7 @@ A quick AdaBoost demonstration (a very simple example that is very likely not go
 import sys
 import pandas as pd
 import numpy as np
-
 import chembl_downloader
-from chembl_downloader import latest
 
 from rdkit import Chem
 
@@ -78,27 +76,19 @@ from scikit_mol.descriptors import MolecularDescriptorTransformer
 ## Import smi2mol transformer
 from scikit_mol.conversions import SmilesToMolTransformer
 
+# Import Scikit-learn
 import sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import AdaBoostClassifier
 
-# sklearn version
+# Scikit-learn version used
 print(sklearn.__version__)
 ```
 
 ```{python}
 # Show system info
 print(sys.version)
-```
-
-Since the latest version of ChEMBL is currently sitting at 34, and rather than repeating what I did before, what I did was to use the previously cached ChEMBL data from version 33. To see the more reproducible way to retrieve ChEMBL data, please see this post - https://jhylin.github.io/Data_in_life_blog/posts/17_ML2-2_Random_forest/2_random_forest_classifier.html#data-retrieval-using-chembl_downloader 
-
-```{python}
-# Reading from the previously saved file
-# df_ache = pd.read_csv("chembl_d_ache_33.tsv", sep = ",")
-# print(df_ache.shape)
-# df_ache.head()
 ```
 
 ```{python}
@@ -114,7 +104,7 @@ path = directory.joinpath(f"chembl_d_ache_33.tsv")
 
 # alternative way to download latest version
 # note: need to specify late_version = latest() first
-# please see post link provided above for details
+# please see post link - https://jhylin.github.io/Data_in_life_blog/posts/17_ML2-2_Random_forest/2_random_forest_classifier.html#data-retrieval-using-chembl_downloader for details
 # path = directory.joinpath(f"chembl_d_ache_{latest_version}.tsv")
 
 if path.is_file():
@@ -146,9 +136,16 @@ df_ache[["pchembl_value"]].describe()
 
 Likely model forming steps:
 
-*Another similar package, molpipeline - https://github.com/basf/MolPipeline - special feature is that it handles errors within the pipeline*
-
 * Define X, y
+
+```{python}
+X = list(df_ache.canonical_smiles)
+y = list(df_ache.max_phase)
+```
+
+```{python}
+X
+```
 
 * SMILES sanitisation
 
@@ -156,15 +153,38 @@ To avoid confusion, this post is likely to focus only on scikit_mol which has a 
 
 ```{python}
 checksmi = CheckSmilesSanitazion()
+# Checking on SMILES only (X only)
+X_valid, X_errors = checksmi.sanitize(X)
+```
 
-X_valid, y_valid, X_errors, y_errors = checksmi.sanitize(X, y)
+Ideally will be using X_valid & y_valid for further work (but this also means removing the invalids or errors completely from the training dataset). Another similar package, molpipeline - https://github.com/basf/MolPipeline might be of some use here, where its special feature is handling errors within the pipeline.
 
-# Likely using X_valid & y_valid for further work (but this also means removing the invalids or errors completely from the training dataset)
+```{python}
+checksmi.errors
+```
+
+No SMILES errors shown.
+
+```{python}
+X_errors
+```
+
+Showed no outputs (no errors detected).
+
+```{python}
+X_valid
+```
+
+Generated a list of valid SMILES.
+
+```{python}
+# Check on y variable - containing some "nan" values
+y
 ```
 
 * Data splitting - randomly splits data 
 ```{python}
-# X_train, y_train, X_test, y_test = train_test_split(X_valid, y_valid)
+# X_train, y_train, X_test, y_test = train_test_split(X_valid, y)
 ```
 
 * Create a pipeline using Scikit-learn
