@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3.1 - AdaBoost, ?Histogram-based gradient boosting and Scikit-mol"
 author: Jennifer HY Lin
-date: '2024-5-3'
+date: '2024-5-8'
 draft: true
 categories: 
     - Machine learning projects
@@ -102,9 +102,9 @@ directory.mkdir(exist_ok=True, parents=True)
 # Create a file path that corresponds to the previously cached ChEMBL data 
 path = directory.joinpath(f"chembl_d_ache_33.tsv")
 
-# alternative way to download latest version
-# note: need to specify late_version = latest() first
+# alternative way to download latest ChEMBL version
 # please see post link - https://jhylin.github.io/Data_in_life_blog/posts/17_ML2-2_Random_forest/2_random_forest_classifier.html#data-retrieval-using-chembl_downloader for details
+# note: need to specify late_version = latest() first
 # path = directory.joinpath(f"chembl_d_ache_{latest_version}.tsv")
 
 if path.is_file():
@@ -117,6 +117,7 @@ else:
 ```
 
 ```{python}
+print(df_ache.shape)
 df_ache.head()
 ```
 
@@ -153,7 +154,7 @@ To avoid confusion, this post is likely to focus only on scikit_mol which has a 
 
 ```{python}
 checksmi = CheckSmilesSanitazion()
-# Checking on SMILES only (X only)
+# Checking on SMILES (X) only 
 X_valid, X_errors = checksmi.sanitize(X)
 ```
 
@@ -182,9 +183,11 @@ Generated a list of valid SMILES.
 y
 ```
 
+?check again the definition of "nan" for max_phase
+
 * Data splitting - randomly splits data 
 ```{python}
-# X_train, y_train, X_test, y_test = train_test_split(X_valid, y)
+X_train, y_train, X_test, y_test = train_test_split(X_valid, y)
 ```
 
 * Create a pipeline using Scikit-learn
