@@ -49,13 +49,13 @@ Parameters to tune:
 
 ###### **Histogram-based gradient boosting**
 
-TBC
+According to Scikit-learn, this is a histogram-based gradient boosting classification tree that is mainly inpired by [LightGBM](https://github.com/Microsoft/LightGBM), which I'm also attempting to use this time. *Mention key features in LightGBM and HistGradientBoostingClassifier*
 
 <br>
 
 ##### **A demo**
 
-A quick AdaBoost demonstration (a very simple example that is very likely not going to reflect real-life scenarios).
+This is only a quick boosted tree demonstration  and a very simple example that is very likely not going to reflect real-life scenarios, so please refer to this with some cautions.
 
 ```{python}
 import sys
@@ -70,6 +70,8 @@ from rdkit import Chem
 from scikit_mol.utilities import CheckSmilesSanitazion
 ## Standardise molecules
 from scikit_mol.standardizer import Standardizer
+## Data scaler (variance scaling)
+from sklearn.preprocessing import StandardScaler
 ## Import fingerprints & descriptors
 from scikit_mol.fingerprints import MorganFingerprintTransformer
 from scikit_mol.descriptors import MolecularDescriptorTransformer
@@ -80,7 +82,7 @@ from scikit_mol.conversions import SmilesToMolTransformer
 import sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
-from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import AdaBoostClassifier, HistGradientBoostingClassifier
 
 # Scikit-learn version used
 print(sklearn.__version__)
@@ -217,23 +219,30 @@ Links re. building pipeline in Scikit-learn:
 - [make_pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline) (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically)
 
 ```{python}
+# Set parameters for adaboost model
+param_adaboost = {max_depth = 3}
+# Set parameters for histgradboosting model
+param_histgradboost = {}
+
+# Building pipeline
 mlpipe = make_pipeline(
     # Convert SMILES to RDKit molecules
     SmilesToMolTransformer(), 
     # Molecule standardisations
     Standardizer(),
-    # RDKit2D descriptors (or MorganFingerprintTransformer() - to be decided)
+    # RDKit2D descriptors (or MorganFingerprintTransformer())
     MolecularDescriptorTransformer(),
+    # Scale variances in descriptor data
+    StandardScaler(),
     # Adaptive boost classifier
-    # to change parameters: **param_adaboost = {max_depth = 4}
-    # AdaBoostClassifier(**param_adaboost)
-    AdaBoostClassifier(),
-
+    AdaBoostClassifier(**param_adaboost),
+    # Potentially adding HistGradientBoostingClassifier() next
+    HistGradientBoostingClassifier()
     )
 ```
 
 
-    - Which data features to use for targets e.g. fingerprints (e.g. Morgan fingerprints best for larger dataset) or RDKit 2D descriptors (useful for smaller datasets) or others
+    - Choosing data features for targets such as fingerprints (e.g. Morgan fingerprints best for larger dataset) or RDKit 2D descriptors (useful for smaller datasets) or others
 
     *Useful Jupyter notebook explaining when to best use parallel calculations to calculate molecular fingerprints and descriptors - https://github.com/EBjerrum/scikit-mol/blob/main/notebooks/07_parallel_transforms.ipynb*
 
