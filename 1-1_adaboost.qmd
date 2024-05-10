@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3.1 - AdaBoost, ?Histogram-based gradient boosting and Scikit-mol"
 author: Jennifer HY Lin
-date: '2024-5-8'
+date: '2024-5-10'
 draft: true
 categories: 
     - Machine learning projects
@@ -129,7 +129,7 @@ df_ache.value_counts("max_phase")
 
 *Dealing with max_phase labelled "nan"*
 
-The [definition of "nan" assigned to max_phase](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/drug-and-compound-questions#what-is-max-phase) indicated that compounds labelled as "nan" or "null" had no evidence showing they've reached clinical trials, so it would be best to remove them from the dataset for now.
+The [definition of "nan" assigned to max_phase](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/drug-and-compound-questions#what-is-max-phase) indicated that compounds labelled as "nan" or "null" had no evidence showing they've reached clinical trials, so it would probably (depend on project goals) be best to remove them from the dataset.
 
 Removing all "nan" compounds in max_phase column.
 
@@ -167,7 +167,7 @@ X
 
 * SMILES sanitisation
 
-To avoid confusion, this post is likely to focus only on scikit_mol which has a different way to handle SMILES errors. Another useful way to deal with SMILES errors is molpipeline's SMILES error handling, with an example shown in one of its notebooks - https://github.com/basf/MolPipeline/blob/main/notebooks/03_error_handling.ipynb. The main difference from what I could see was that molpipeline takes into account all the invalid SMILES by giving each invalid SMILES a "nan" label in the pipeline process - this maintains the matrix shape and good for tracking down the problematic SMILES (compounds).
+This post is likely going to focus only on scikit_mol which has a different way to handle SMILES errors. Another useful way to deal with SMILES errors is molpipeline's SMILES error handling, with an example shown in one of its notebooks - https://github.com/basf/MolPipeline/blob/main/notebooks/03_error_handling.ipynb. The main difference from what I could see was that molpipeline takes into account all the invalid SMILES by giving each invalid SMILES a "nan" label in the pipeline process - this maintains the matrix shape and good for tracking down the problematic SMILES (compounds).
 
 ```{python}
 checksmi = CheckSmilesSanitazion()
@@ -196,7 +196,7 @@ X_valid
 Generated a list of valid SMILES.
 
 ```{python}
-# Check on y variable - containing some "nan" values
+# Check on y variable
 y
 ```
 
@@ -212,9 +212,9 @@ X_train, y_train, X_test, y_test = train_test_split(X_valid, y, test_size=0.2, r
     - using Scikit-mol transformers
 
 Links re. building pipeline in Scikit-learn:
-- Pipeline module - https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn-pipeline-pipeline
+- [Pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn-pipeline-pipeline)
 
-- make_pipeline module (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically) - https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline
+- [make_pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline) (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically)
 
 ```{python}
 mlpipe = make_pipeline(
@@ -227,7 +227,8 @@ mlpipe = make_pipeline(
     # Adaptive boost classifier
     # to change parameters: **param_adaboost = {max_depth = 4}
     # AdaBoostClassifier(**param_adaboost)
-    AdaBoostClassifier()
+    AdaBoostClassifier(),
+
     )
 ```
 
