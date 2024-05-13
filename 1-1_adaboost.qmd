@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3.1 - AdaBoost, ?Histogram-based gradient boosting and Scikit-mol"
 author: Jennifer HY Lin
-date: '2024-5-10'
+date: '2024-5-13'
 draft: true
 categories: 
     - Machine learning projects
@@ -20,8 +20,10 @@ bibliography: references.bib
 ##### **Quick overview**
 
 AdaBoost
-?Histogram-based gradient boosting
-A sample demo using scikit_learn's AdaBoostClassifier & scikit_mol's transformers
+Gradient boosted trees
+A sample demo using scikit_learn's AdaBoostClassifier, GradientBoostingClassifer() & scikit_mol's transformers
+
+<br>
 
 ##### **Some introductions**
 
@@ -47,9 +49,9 @@ Parameters to tune:
 
 * min_samples_split - minimum required number of samples to consider a split
 
-###### **Histogram-based gradient boosting**
+###### **Gradient boosted trees**
 
-According to Scikit-learn, this is a histogram-based gradient boosting classification tree that is mainly inpired by [LightGBM](https://github.com/Microsoft/LightGBM), which I'm also attempting to use this time. *Mention key features in LightGBM and HistGradientBoostingClassifier*
+In scikit-learn there are two types of gradient boosted trees. One way to choose when to use which one seems to be based on the sample size at first. [GradientBoostingClassifer()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html#sklearn.ensemble.GradientBoostingClassifier) class is likely better when there is only a small sample size (e.g. when number of sample is less than 10,000), while [HistGradientBoostingClassifier()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.HistGradientBoostingClassifier.html#sklearn.ensemble.HistGradientBoostingClassifier) class is likely better when your sample size is at least 10,000+ or more. The HistGradientBoostingClassifier() is a histogram-based gradient boosting classification tree that is mainly inpired by [LightGBM](https://github.com/Microsoft/LightGBM). Due to having only a small sample size here, I'm only going to attempt using the GradientBoostingClassifier() this time.
 
 <br>
 
@@ -78,13 +80,13 @@ from scikit_mol.descriptors import MolecularDescriptorTransformer
 ## Import smi2mol transformer
 from scikit_mol.conversions import SmilesToMolTransformer
 
-# Import Scikit-learn
+# Import scikit-learn
 import sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.ensemble import AdaBoostClassifier, HistGradientBoostingClassifier
 
-# Scikit-learn version used
+# scikit-learn version used
 print(sklearn.__version__)
 ```
 
@@ -169,7 +171,7 @@ X
 
 * SMILES sanitisation
 
-This post is likely going to focus only on scikit_mol which has a different way to handle SMILES errors. Another useful way to deal with SMILES errors is molpipeline's SMILES error handling, with an example shown in one of its notebooks - https://github.com/basf/MolPipeline/blob/main/notebooks/03_error_handling.ipynb. The main difference from what I could see was that molpipeline takes into account all the invalid SMILES by giving each invalid SMILES a "nan" label in the pipeline process - this maintains the matrix shape and good for tracking down the problematic SMILES (compounds).
+This post is likely going to focus only on Scikit_mol which has a different way to handle SMILES errors. Another useful way to deal with SMILES errors is molpipeline's SMILES error handling, with an example shown in one of its notebooks - https://github.com/basf/MolPipeline/blob/main/notebooks/03_error_handling.ipynb. The main difference from what I could see was that molpipeline takes into account all the invalid SMILES by giving each invalid SMILES a "nan" label in the pipeline process - this maintains the matrix shape and good for tracking down the problematic SMILES (compounds).
 
 ```{python}
 checksmi = CheckSmilesSanitazion()
@@ -208,12 +210,12 @@ y
 X_train, y_train, X_test, y_test = train_test_split(X_valid, y, test_size=0.2, random_state=3)
 ```
 
-* Create a pipeline using Scikit-learn
+* Create a pipeline using skit-learn
 
     - possibly chaining AdaBoostClassifier and HistGradientBoostingClassifier
     - using Scikit-mol transformers
 
-Links re. building pipeline in Scikit-learn:
+Links re. building pipeline in scikit-learn:
 - [Pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn-pipeline-pipeline)
 
 - [make_pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline) (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically)
@@ -236,7 +238,7 @@ mlpipe = make_pipeline(
     StandardScaler(),
     # Adaptive boost classifier
     AdaBoostClassifier(**param_adaboost),
-    # Potentially adding HistGradientBoostingClassifier() next
+    # Potentially adding HistGradientBoostingClassifier() or rather GradientBoostingClassifier() next
     HistGradientBoostingClassifier()
     )
 ```
