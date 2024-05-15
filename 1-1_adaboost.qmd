@@ -78,7 +78,7 @@ In scikit-learn there are two types of gradient boosted trees. One way to choose
 
 XGBoost or extreme gradient boosting is another commonly used open-source package, originally developed at the University of Washington by T. Chen and C. Guestrin, that uses stochastic gradient boosting to build an ensemble of predictive models.
 
-* Parameters to tune: 
+* Main parameters to tune: 
 - subsample - controls fraction of observations that should be sampled at each iteration
 - eta (or learning-rate in scikit-learn) - shrinkage factor applied to alpha in the boosting algorithm
 
@@ -86,7 +86,7 @@ XGBoost or extreme gradient boosting is another commonly used open-source packag
 
 ##### **A demo**
 
-This is only a quick boosted tree demonstration  and a very simple example that is very likely not going to reflect real-life scenarios. 
+This is only a quick boosted tree demonstration  and a very simple example that is very likely not going to reflect real-life scenarios (use with caution). 
 
 ```{python}
 import sys
