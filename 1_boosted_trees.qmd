@@ -23,8 +23,6 @@ Options:
 - ChEMBL dataset obtained previously via chembl_downloader
 - Biogen (ADMET data) or activity cliff paper
 
-*AdaBoost* 
-
 *LightGBM* 
 * Developed by Microsoft
 
@@ -35,8 +33,3 @@ Scikit-learn has built-in functions
 - HistGradientBoostingClassifier() or regressor - best for sample size > tens of thousands
 - GradientBoostingClassifier() or regressor - for small sample size e.g. < tens of thousands
 
-*XGBoost* 
-* Using stochastic gradient boosting
-* Parameters to tune: 
-- subsample - controls fraction of observations that should be sampled at each iteration
-- eta (or learning-rate in scikit-learn) - shrinkage factor applied to alpha in the boosting algorithm

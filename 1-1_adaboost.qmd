@@ -1,8 +1,8 @@
 ---
 title: "Boosted trees"
-subtitle: "Series 2.3.1 - AdaBoost, Gradient boosting and Scikit-mol"
+subtitle: "Series 2.3.1 - Adaptive boost, gradient boosting and scikit-mol"
 author: Jennifer HY Lin
-date: '2024-5-15'
+date: '2024-5-16'
 draft: true
 categories: 
     - Machine learning projects
@@ -20,9 +20,8 @@ bibliography: references.bib
 ##### **Quick overview**
 
 - AdaBoost
-- Gradient boosted trees
-- A sample demo using scikit_learn's 
-- AdaBoostClassifier, xgboost & scikit_mol's transformers
+- Gradient boosted trees (xgboost)
+- A sample demo using scikit_learn's AdaBoostClassifier, xgboost & scikit_mol's transformers
 
 <br>
 
@@ -62,26 +61,32 @@ Essentially a similar concept is behind the gradient boosted trees where a serie
 
 from IPython.display import Markdown
 from tabulate import tabulate
+
 table = [
-    ["trains weak learners that are usually deeper with a max depth of 3 to 6 (or max number of 8 to 64 leaf nodes)","trains weak learners (decision tree stumps) based on errors from previous decision tree stump"], 
-    ["uses prediction errors directly to produce the target variable to fit the next tree","uses prediction errors to assign sample weights"], 
-    #["", ""]
+    ["trains weak learners (decision tree stumps) based on errors from previous decision tree stump", 
+    "trains weak learners that are deeper than decision tree stumps with a max depth of 3 to 6 (or max number of leaf nodes from 8 to 64)"], 
+    ["uses prediction errors to calculate sample weights and classifier weights", 
+    "uses prediction errors directly to produce the target variable to fit the next tree"], 
+    ["uses individual weighting terms for each tree", 
+    "uses a global learning rate (learning_rate) for each tree"]
     ]
-Markdown(tabulate(
-  table, 
-  headers=["XGBoost","AdaBoost"]
-))
+
+Markdown(tabulate(table, headers=["AdaBoost", "XGBoost"]))
 ```
 
 In scikit-learn there are two types of gradient boosted trees. One way to choose when to use which one seems to be based on the sample size at first. [GradientBoostingClassifer()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html#sklearn.ensemble.GradientBoostingClassifier) class is likely better when there is only a small sample size (e.g. when number of sample is less than 10,000), while [HistGradientBoostingClassifier()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.HistGradientBoostingClassifier.html#sklearn.ensemble.HistGradientBoostingClassifier) class is likely better when your sample size is at least 10,000+ or more. The HistGradientBoostingClassifier() is a histogram-based gradient boosting classification tree that is mainly inpired by [LightGBM](https://github.com/Microsoft/LightGBM). 
 
-*XGBoost*
+XGBoost or extreme gradient boosting is another commonly used open-source package, originally developed at the University of Washington by T. Chen and C. Guestrin, that uses stochastic gradient boosting to build an ensemble of predictive models.
+
+* Parameters to tune: 
+- subsample - controls fraction of observations that should be sampled at each iteration
+- eta (or learning-rate in scikit-learn) - shrinkage factor applied to alpha in the boosting algorithm
 
 <br>
 
 ##### **A demo**
 
-This is only a quick boosted tree demonstration  and a very simple example that is very likely not going to reflect real-life scenarios, so please refer to this with some cautions.
+This is only a quick boosted tree demonstration  and a very simple example that is very likely not going to reflect real-life scenarios. 
 
 ```{python}
 import sys
