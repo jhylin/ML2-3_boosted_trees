@@ -19,9 +19,10 @@ bibliography: references.bib
 
 ##### **Quick overview**
 
-AdaBoost
-Gradient boosted trees
-A sample demo using scikit_learn's AdaBoostClassifier, GradientBoostingClassifer() & scikit_mol's transformers
+- AdaBoost
+- Gradient boosted trees
+- A sample demo using scikit_learn's 
+- AdaBoostClassifier, xgboost & scikit_mol's transformers
 
 <br>
 
@@ -49,9 +50,28 @@ Parameters to tune:
 
 * min_samples_split - minimum required number of samples to consider a split
 
+<br>
+
 ###### **Gradient boosted trees**
 
-*Principle concept*
+Essentially a similar concept is behind the gradient boosted trees where a series of weak learners is trained in order to create a stronger ensemble of models [@mlbook2022]. However, some differences between these two types of boosted trees.
+
+```{python}
+#| echo: false
+#| tbl-cap: Differences between XGBoost and AdaBoost
+
+from IPython.display import Markdown
+from tabulate import tabulate
+table = [
+    ["trains weak learners that are usually deeper with a max depth of 3 to 6 (or max number of 8 to 64 leaf nods)","trains weak learners (decision tree stumps based on errors from previous decision tree stump)"], 
+    ["uses prediction errors directly to produce the target variable to fit the next tree","uses prediction errors to assign sample weights"], 
+    #["", ""]
+    ]
+Markdown(tabulate(
+  table, 
+  headers=["XGBoost","AdaBoost"]
+))
+```
 
 In scikit-learn there are two types of gradient boosted trees. One way to choose when to use which one seems to be based on the sample size at first. [GradientBoostingClassifer()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html#sklearn.ensemble.GradientBoostingClassifier) class is likely better when there is only a small sample size (e.g. when number of sample is less than 10,000), while [HistGradientBoostingClassifier()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.HistGradientBoostingClassifier.html#sklearn.ensemble.HistGradientBoostingClassifier) class is likely better when your sample size is at least 10,000+ or more. The HistGradientBoostingClassifier() is a histogram-based gradient boosting classification tree that is mainly inpired by [LightGBM](https://github.com/Microsoft/LightGBM). 
 
@@ -228,28 +248,28 @@ Links re. building pipeline in scikit-learn:
 - [make_pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline) (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically)
 
 ```{python}
-# Set parameters for adaboost model
-param_adaboost = {max_depth = 3}
-# Set parameters for xgboost model
-param_xgboost = {}
+# # Set parameters for adaboost model
+# param_adaboost = {max_depth = 3}
+# # Set parameters for xgboost model
+# param_xgboost = {}
 
-# Building pipeline
-mlpipe = make_pipeline(
-    # Convert SMILES to RDKit molecules
-    SmilesToMolTransformer(), 
-    # Molecule standardisations
-    Standardizer(),
-    # RDKit2D descriptors (or MorganFingerprintTransformer())
-    MolecularDescriptorTransformer(),
-    # Scale variances in descriptor data
-    StandardScaler(),
-    # Adaptive boost classifier
-    AdaBoostClassifier(**param_adaboost),
-    # Gradient boosting classifier
-    GradientBoostingClassifier(),
-    # Try adding xgboost
-    XGBClassifier()
-    )
+# # Building pipeline
+# mlpipe = make_pipeline(
+#     # Convert SMILES to RDKit molecules
+#     SmilesToMolTransformer(), 
+#     # Molecule standardisations
+#     Standardizer(),
+#     # RDKit2D descriptors (or MorganFingerprintTransformer())
+#     MolecularDescriptorTransformer(),
+#     # Scale variances in descriptor data
+#     StandardScaler(),
+#     # Adaptive boost classifier
+#     AdaBoostClassifier(**param_adaboost),
+#     # Gradient boosting classifier
+#     GradientBoostingClassifier(),
+#     # Try adding xgboost
+#     XGBClassifier()
+#     )
 ```
 
 
