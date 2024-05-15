@@ -186,6 +186,9 @@ Dataframe reduced to 734 rows only.
 df_ache[["max_phase"]].describe()
 ```
 
+*check if data ok for binary classification? - e.g. target as max_phase 4 ("1"), with rest max_phase -1, 1, 2, 3 as "0"*
+
+
 <br>
 
 ##### **Model building using pipeline**
