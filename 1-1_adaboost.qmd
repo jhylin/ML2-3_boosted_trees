@@ -63,7 +63,7 @@ Essentially a similar concept is behind the gradient boosted trees where a serie
 from IPython.display import Markdown
 from tabulate import tabulate
 table = [
-    ["trains weak learners that are usually deeper with a max depth of 3 to 6 (or max number of 8 to 64 leaf nods)","trains weak learners (decision tree stumps based on errors from previous decision tree stump)"], 
+    ["trains weak learners that are usually deeper with a max depth of 3 to 6 (or max number of 8 to 64 leaf nodes)","trains weak learners (decision tree stumps) based on errors from previous decision tree stump"], 
     ["uses prediction errors directly to produce the target variable to fit the next tree","uses prediction errors to assign sample weights"], 
     #["", ""]
     ]
