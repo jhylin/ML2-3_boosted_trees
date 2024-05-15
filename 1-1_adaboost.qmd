@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3.1 - AdaBoost, Gradient boosting and Scikit-mol"
 author: Jennifer HY Lin
-date: '2024-5-13'
+date: '2024-5-15'
 draft: true
 categories: 
     - Machine learning projects
@@ -88,7 +88,10 @@ from scikit_mol.conversions import SmilesToMolTransformer
 import sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
-from sklearn.ensemble import AdaBoostClassifier, HistGradientBoostingClassifier
+from sklearn.ensemble import AdaBoostClassifier
+
+# Import xgboost classifier
+from xgboost import XGBClassifier
 
 # scikit-learn version used
 print(sklearn.__version__)
@@ -227,8 +230,8 @@ Links re. building pipeline in scikit-learn:
 ```{python}
 # Set parameters for adaboost model
 param_adaboost = {max_depth = 3}
-# Set parameters for histgradboosting model
-param_histgradboost = {}
+# Set parameters for xgboost model
+param_xgboost = {}
 
 # Building pipeline
 mlpipe = make_pipeline(
@@ -244,7 +247,8 @@ mlpipe = make_pipeline(
     AdaBoostClassifier(**param_adaboost),
     # Gradient boosting classifier
     GradientBoostingClassifier(),
-    # ?add xgboost
+    # Try adding xgboost
+    XGBClassifier()
     )
 ```
 
@@ -268,3 +272,5 @@ mlpipe = make_pipeline(
 ```{python}
 # Calculate metrics of the model
 ```
+
+Try using pickle to download model and parameters
