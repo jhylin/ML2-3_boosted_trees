@@ -186,17 +186,18 @@ Dataframe reduced to 734 rows only.
 df_ache[["max_phase"]].describe()
 ```
 
-*binary or multi-class classifications*
-
-binary - target as max_phase 4 ("1"), with rest max_phase -1, 1, 2, 3 as "0"
-
-multi-class - target as max_phase as how it shows e.g. -1, 1, 2, 3, 4
-
 <br>
 
 ##### **Model building using pipeline**
 
 Likely model forming steps:
+
+* Determine whether to use binary or multi-class classification
+
+Previously used binary classification, e.g. target as max_phase 4 ("1"), with rest max_phase -1, 1, 2, 3 as "0".
+
+This time likely trying out multi-class classification to predict max_phase which contains -1, 1, 2, 3, 4 -> *check max_phase -1 (may need to remove?)*
+
 
 * Define X, y
 
@@ -262,9 +263,13 @@ Links re. building pipeline in scikit-learn:
 
 ```{python}
 # Set parameters for adaboost model
-param_adaboost = {max_depth = 3}
+# SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) for multi-class classification
+param_adaboost = {max_depth = 3, algorithm = "SAMME", random_state = 2}
+
 # Set parameters for xgboost model
-param_xgboost = {}
+# For multi-class classification, use softprob for loss function
+# https://xgboost.readthedocs.io/en/latest/parameter.html#learning-task-parameters
+param_xgboost = {objective = 'multi:softprob'}
 
 # Building pipeline
 mlpipe = make_pipeline(
@@ -278,10 +283,8 @@ mlpipe = make_pipeline(
     StandardScaler(),
     # Apply adaptive boost classifier
     AdaBoostClassifier(**param_adaboost),
-    # Apply gradient boosting classifier
-    GradientBoostingClassifier(),
     # Try applying xgboost classifier
-    XGBClassifier()
+    XGBClassifier(**param_xgboost)
     )
 ```
 
