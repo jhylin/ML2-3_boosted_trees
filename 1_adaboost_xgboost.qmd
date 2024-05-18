@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3.1 - Adaptive boost, gradient boosting and scikit-mol"
 author: Jennifer HY Lin
-date: '2024-5-16'
+date: '2024-5-18'
 draft: true
 categories: 
     - Machine learning projects
@@ -186,8 +186,11 @@ Dataframe reduced to 734 rows only.
 df_ache[["max_phase"]].describe()
 ```
 
-*check if data ok for binary classification? - e.g. target as max_phase 4 ("1"), with rest max_phase -1, 1, 2, 3 as "0"*
+*binary or multi-class classifications*
 
+binary - target as max_phase 4 ("1"), with rest max_phase -1, 1, 2, 3 as "0"
+
+multi-class - target as max_phase as how it shows e.g. -1, 1, 2, 3, 4
 
 <br>
 
@@ -258,28 +261,28 @@ Links re. building pipeline in scikit-learn:
 - [make_pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline) (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically)
 
 ```{python}
-# # Set parameters for adaboost model
-# param_adaboost = {max_depth = 3}
-# # Set parameters for xgboost model
-# param_xgboost = {}
+# Set parameters for adaboost model
+param_adaboost = {max_depth = 3}
+# Set parameters for xgboost model
+param_xgboost = {}
 
-# # Building pipeline
-# mlpipe = make_pipeline(
-#     # Convert SMILES to RDKit molecules
-#     SmilesToMolTransformer(), 
-#     # Molecule standardisations
-#     Standardizer(),
-#     # RDKit2D descriptors (or MorganFingerprintTransformer())
-#     MolecularDescriptorTransformer(),
-#     # Scale variances in descriptor data
-#     StandardScaler(),
-#     # Adaptive boost classifier
-#     AdaBoostClassifier(**param_adaboost),
-#     # Gradient boosting classifier
-#     GradientBoostingClassifier(),
-#     # Try adding xgboost
-#     XGBClassifier()
-#     )
+# Building pipeline
+mlpipe = make_pipeline(
+    # Convert SMILES to RDKit molecules
+    SmilesToMolTransformer(), 
+    # Molecule standardisations
+    Standardizer(),
+    # Generate RDKit2D descriptors (or MorganFingerprintTransformer()) for each molecule
+    MolecularDescriptorTransformer(),
+    # Scale variances in descriptor data
+    StandardScaler(),
+    # Apply adaptive boost classifier
+    AdaBoostClassifier(**param_adaboost),
+    # Apply gradient boosting classifier
+    GradientBoostingClassifier(),
+    # Try applying xgboost classifier
+    XGBClassifier()
+    )
 ```
 
 
