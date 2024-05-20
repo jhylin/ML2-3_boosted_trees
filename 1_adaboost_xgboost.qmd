@@ -121,15 +121,11 @@ from sklearn.ensemble import AdaBoostClassifier
 import xgboost
 from xgboost import XGBClassifier
 
-# Add f-string
-print(xgboost.__version__)
-
-# Add f-string
-print(sklearn.__version__)
+print(f"xgboost version used: {xgboost.__version__}\nscikit-learn version used: {sklearn.__version__}")
 ```
 
 ```{python}
-# Show system info
+# Show Python version used 
 print(sys.version)
 ```
 
