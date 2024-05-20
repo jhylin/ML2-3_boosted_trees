@@ -263,8 +263,16 @@ Links re. building pipeline in scikit-learn:
 
 ```{python}
 # Set parameters for adaboost model
-# SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) for multi-class classification
-param_adaboost = {max_depth = 3, algorithm = "SAMME", random_state = 2}
+param_adaboost = {
+    DecisionTreeClassifier(max_depth = 3), 
+    # default: n_estimators = 50, learning_rate = 1.0 (trade-off between them)
+    n_estimators = 100, 
+    learning_rate = 0.5, 
+    # SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) algorithm 
+    # for multi-class classification
+    algorithm = "SAMME", 
+    random_state = 2
+    }
 
 # Set parameters for xgboost model
 # For multi-class classification, use softprob for loss function
