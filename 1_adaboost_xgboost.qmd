@@ -1,8 +1,8 @@
 ---
 title: "Boosted trees"
-subtitle: "Series 2.3.1 - Adaptive boost, gradient boosting and scikit-mol"
+subtitle: "Series 2.3.1 - AdaBoost, XGBoost and Scikit-mol"
 author: Jennifer HY Lin
-date: '2024-5-18'
+date: '2024-5-22'
 draft: true
 categories: 
     - Machine learning projects
@@ -17,15 +17,11 @@ format: html
 bibliography: references.bib
 ---
 
-##### **Quick overview**
+##### **Some introductions**
 
-- AdaBoost
-- Gradient boosted trees
-- A sample demo using AdaBoost classifier in scikit_learn, xgboost classifier & transformers from scikit_mol
+I've somehow promised myself to do a tree series on machine learning and glad I've made it to the boosted trees part (it took a while...). This is also likely my last post on this topic for now as there are other things I want to explore in the near future. Hopefully this is somewhat useful for anyone who's new to this.
 
 <br>
-
-##### **Some introductions**
 
 ###### **AdaBoost**
 
@@ -82,13 +78,15 @@ Main parameters to tune:
 
 - eta (or learning-rate in scikit-learn) - shrinkage factor applied to alpha in the boosting algorithm
 
-In scikit-learn, there are two types of gradient boosted tree methods, GradientBoostingClassifer() and HistGradientBoostingClassifier() (note: regressors avalable too), in its sklearn.ensemble module. One way to choose between them is to check sample size first. [GradientBoostingClassifer()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html#sklearn.ensemble.GradientBoostingClassifier) class is likely better when there is only a small sample size (e.g. when number of sample is less than 10,000), while [HistGradientBoostingClassifier()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.HistGradientBoostingClassifier.html#sklearn.ensemble.HistGradientBoostingClassifier) class is likely better when your sample size is at least 10,000+ or more. The HistGradientBoostingClassifier() is a histogram-based gradient boosting classification tree that is mainly inpired by [LightGBM](https://github.com/Microsoft/LightGBM). In the example below, I only intended to use the AdaBoostClassifier() and XGBClassifier() this time only.
+In scikit-learn, there are two types of gradient boosted tree methods, GradientBoostingClassifer() and HistGradientBoostingClassifier() (note: regressors are also available), in its sklearn.ensemble module. One way to choose between them is to check sample size first. [GradientBoostingClassifer()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html#sklearn.ensemble.GradientBoostingClassifier) class is likely better when there is only a small sample size (e.g. when number of sample is less than 10,000), while [HistGradientBoostingClassifier()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.HistGradientBoostingClassifier.html#sklearn.ensemble.HistGradientBoostingClassifier) class is likely better when your sample size is at least 10,000+ or more. The HistGradientBoostingClassifier() is a histogram-based gradient boosting classification tree that is mainly inpired by [LightGBM](https://github.com/Microsoft/LightGBM). 
+
+Rather than making the introduction part too long in this post, please refer to this book by [@mlbook2022] for further details on tree models.
 
 <br>
 
 ##### **A demo**
 
-This is only a quick boosted tree demonstration  and a very simple example that is very likely not going to reflect real-life scenarios (use with caution). 
+In the example below, I decided to use only AdaBoostClassifier() and XGBClassifier() for now. Please note that the dataset used here is very small and the example is likely not going to reflect real-life use case completely (use with care). 
 
 ```{python}
 import sys
@@ -115,6 +113,7 @@ from scikit_mol.conversions import SmilesToMolTransformer
 import sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
 
 # Import xgboost classifier
@@ -253,8 +252,7 @@ X_train, y_train, X_test, y_test = train_test_split(X_valid, y, test_size=0.2, r
 
 * Create a pipeline using skit-learn
 
-    - possibly chaining AdaBoostClassifier and HistGradientBoostingClassifier
-    - using Scikit-mol transformers
+    - possibly chaining AdaBoostClassifier(), XGBClassifier(), along with Scikit-mol transformers
 
 Links re. building pipeline in scikit-learn:
 - [Pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn-pipeline-pipeline)
@@ -264,20 +262,20 @@ Links re. building pipeline in scikit-learn:
 ```{python}
 # Set parameters for adaboost model
 param_adaboost = {
-    DecisionTreeClassifier(max_depth = 3), 
+    "estimator": DecisionTreeClassifier(max_depth = 3), 
     # default: n_estimators = 50, learning_rate = 1.0 (trade-off between them)
-    n_estimators = 100, 
-    learning_rate = 0.5, 
+    "n_estimators": 100, 
+    "learning_rate": 0.5, 
     # SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) algorithm 
     # for multi-class classification
-    algorithm = "SAMME", 
-    random_state = 2
+    "algorithm": "SAMME", 
+    "random_state": 2
     }
 
 # Set parameters for xgboost model
 # For multi-class classification, use softprob for loss function
 # https://xgboost.readthedocs.io/en/latest/parameter.html#learning-task-parameters
-param_xgboost = {objective = 'multi:softprob'}
+param_xgboost = {"objective": 'multi:softprob'}
 
 # Building pipeline
 mlpipe = make_pipeline(
