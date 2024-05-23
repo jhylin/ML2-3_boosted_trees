@@ -266,7 +266,7 @@ Links re. building pipeline in scikit-learn:
 params_adaboost = {
     "estimator": DecisionTreeClassifier(max_depth = 3), 
     # default: n_estimators = 50, learning_rate = 1.0 (trade-off between them)
-    "n_estimators": 50, 
+    "n_estimators": 80, 
     "learning_rate": 0.2, 
     # SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) algorithm 
     # for multi-class classification
@@ -282,6 +282,7 @@ params_xgboost = {
     "max_depth": 3,
     "objective": 'multi:softprob', 
     "learning_rate": 0.2, 
+    "subsample":
 
     }
 
