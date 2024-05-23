@@ -53,7 +53,9 @@ Essentially a similar concept is behind gradient boosted trees where a series of
 
 ```{python}
 #| echo: false
-#| tbl-cap: Differences between XGBoost and AdaBoost
+#| tbl-cap-location: margin
+#| tbl-cap: Differences between XGBoost and AdaBoost [@mlbook2022]
+
 
 from IPython.display import Markdown
 from tabulate import tabulate
@@ -72,11 +74,11 @@ Markdown(tabulate(table, headers=["AdaBoost", "XGBoost"]))
 
 XGBoost or extreme gradient boosting [@DBLP:journals/corr/ChenG16] is one of the most commonly used open-source package, originally developed at the University of Washington by T. Chen and C. Guestrin, that uses stochastic gradient boosting to build an ensemble of predictive models. [XGBoost documentation](https://xgboost.readthedocs.io/en/stable/index.html) - https://xgboost.readthedocs.io/en/stable/index.html
 
-Main parameters to tune: 
+Main parameters to tune [@bruce2020]: 
 
-- subsample - controls fraction of observations that should be sampled at each iteration
+- subsample - controls fraction of observations that should be sampled at each iteration or subsample ratio of the training instance (as quoted from XGBoost's Python API reference via its [Scikit-learn API](https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn))
 
-- eta (or learning-rate in scikit-learn) - shrinkage factor applied to alpha in the boosting algorithm
+- eta or learning-rate (it's currently named as "learning_rate" in scikit-learn and XGBoost) - shrinkage factor applied to alpha in the boosting algorithm or it may be more easily understood as the boosting learning rate used to prevent overfitting
 
 In scikit-learn, there are two types of gradient boosted tree methods, GradientBoostingClassifer() and HistGradientBoostingClassifier() (note: regressors are also available), in its sklearn.ensemble module. One way to choose between them is to check sample size first. [GradientBoostingClassifer()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html#sklearn.ensemble.GradientBoostingClassifier) class is likely better when there is only a small sample size (e.g. when number of sample is less than 10,000), while [HistGradientBoostingClassifier()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.HistGradientBoostingClassifier.html#sklearn.ensemble.HistGradientBoostingClassifier) class is likely better when your sample size is at least 10,000+ or more. The HistGradientBoostingClassifier() is a histogram-based gradient boosting classification tree that is mainly inpired by [LightGBM](https://github.com/Microsoft/LightGBM). 
 
@@ -261,11 +263,11 @@ Links re. building pipeline in scikit-learn:
 
 ```{python}
 # Set parameters for adaboost model
-param_adaboost = {
+params_adaboost = {
     "estimator": DecisionTreeClassifier(max_depth = 3), 
     # default: n_estimators = 50, learning_rate = 1.0 (trade-off between them)
-    "n_estimators": 100, 
-    "learning_rate": 0.5, 
+    "n_estimators": 50, 
+    "learning_rate": 0.2, 
     # SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) algorithm 
     # for multi-class classification
     "algorithm": "SAMME", 
@@ -275,7 +277,13 @@ param_adaboost = {
 # Set parameters for xgboost model
 # For multi-class classification, use softprob for loss function
 # https://xgboost.readthedocs.io/en/latest/parameter.html#learning-task-parameters
-param_xgboost = {"objective": 'multi:softprob'}
+params_xgboost = {
+    "n_estimators": 100,
+    "max_depth": 3,
+    "objective": 'multi:softprob', 
+    "learning_rate": 0.2, 
+
+    }
 
 # Building pipeline
 mlpipe = make_pipeline(
@@ -288,9 +296,9 @@ mlpipe = make_pipeline(
     # Scale variances in descriptor data
     StandardScaler(),
     # Apply adaptive boost classifier
-    AdaBoostClassifier(**param_adaboost),
+    AdaBoostClassifier(**params_adaboost),
     # Try applying xgboost classifier
-    XGBClassifier(**param_xgboost)
+    XGBClassifier(**params_xgboost)
     )
 ```
 
@@ -309,6 +317,14 @@ mlpipe = make_pipeline(
 # # use the pipeline to predict on testing data
 # mlpipe.predict(y_test)
 ```
+
+```{python}
+# Hyperparameter tuning
+```
+
+
+Ideally, AdaBoost is not as useful as XGBoost (explained in [@mlbook2022]). So the focus on hyperparameter tuning will be on XGBoost. However, it contains a long list of parameters and one of the ways to find the most optimal set of parameters is via using cross-validation.
+
 
 
 ```{python}
