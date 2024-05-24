@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3.1 - AdaBoost, XGBoost and Scikit-mol"
 author: Jennifer HY Lin
-date: '2024-5-22'
+date: '2024-5-24'
 draft: true
 categories: 
     - Machine learning projects
@@ -31,25 +31,25 @@ As quoted from [scikit-learn](https://scikit-learn.org/stable/modules/ensemble.h
 
 > ...fit a sequence of weak learners (i.e., models that are only slightly better than random guessing, such as small decision trees) on repeatedly modified versions of the data.
 
-Note: weak learners = an ensemble of very simple base classifiers e.g. decision tree stumps [@mlbook2022]
+Note: weak learner means an ensemble of very simple base classifiers such as decision tree stumps [@mlbook2022]
 
 During the process of running the algorithm, increased weights are given to the incorrectly predicted samples at each iteration, and less weights are given to the correctly predicted ones. This then forces the AdaBoost models to focus more on the less accurately predicted samples with the aim to improve ensemble performance. The predictions from these iterations are combined to produce a final prediction via a weighted majority vote style, which is a well-known signature of tree models. Overall, AdaBoost algorithm can be used for classification or regression problems. The main difference between bagging and boosting is that boosting only uses random subsets of training samples drawn from the training dataset without any replacements [@mlbook2022]. One caveat to note is that AdaBoost tend to overfit training data (high variance).
 
 Parameters to tune:
 
-* n_estimators - number of weak learners
+* *n_estimators* - number of weak learners
 
-* learning_rate - contributions of weak learners in the final combination
+* *learning_rate* - contributions of weak learners in the final combination
 
-* max_depth - depth of trees
+* *max_depth* - depth of trees
 
-* min_samples_split - minimum required number of samples to consider a split
+* *min_samples_split* - minimum required number of samples to consider a split
 
 <br>
 
 ###### **Gradient boosted trees**
 
-Essentially a similar concept is behind gradient boosted trees where a series of weak learners is trained in order to create a stronger ensemble of models [@mlbook2022]. However, some differences between these two types of boosted trees (e.g. AdaBoost and xgboost) should be noted, and rather than describing them in a paragraph, I've summarised them in a table below.
+Essentially a similar concept is behind gradient boosted trees where a series of weak learners is trained in order to create a stronger ensemble of models [@mlbook2022]. However, some differences between these two types of boosted trees (e.g. AdaBoost and XGBoost) should be noted, and rather than describing them in a paragraph, I've summarised them in a table below.
 
 ```{python}
 #| echo: false
@@ -61,34 +61,40 @@ from IPython.display import Markdown
 from tabulate import tabulate
 
 table = [
-    ["trains weak learners (decision tree stumps) based on errors from previous decision tree stump", 
+    ["trains weak learners based on errors from previous decision tree stump", 
     "trains weak learners that are deeper than decision tree stumps with a max depth of 3 to 6 (or max number of leaf nodes from 8 to 64)"], 
     ["uses prediction errors to calculate sample weights and classifier weights", 
     "uses prediction errors directly to produce the target variable to fit the next tree"], 
     ["uses individual weighting terms for each tree", 
-    "uses a global learning rate (learning_rate) for each tree"]
+    "uses a global learning rate for each tree"]
     ]
 
 Markdown(tabulate(table, headers=["AdaBoost", "XGBoost"]))
 ```
 
-XGBoost or extreme gradient boosting [@DBLP:journals/corr/ChenG16] is one of the most commonly used open-source package, originally developed at the University of Washington by T. Chen and C. Guestrin, that uses stochastic gradient boosting to build an ensemble of predictive models. [XGBoost documentation](https://xgboost.readthedocs.io/en/stable/index.html) - https://xgboost.readthedocs.io/en/stable/index.html
+XGBoost or extreme gradient boosting [@DBLP:journals/corr/ChenG16] is one of the most commonly used open-source packages, originally developed at the University of Washington by T. Chen and C. Guestrin, that uses stochastic gradient boosting to build an ensemble of predictive models. 
 
-Main parameters to tune [@bruce2020]: 
+[XGBoost documentation](https://xgboost.readthedocs.io/en/stable/index.html) - https://xgboost.readthedocs.io/en/stable/index.html
 
-- subsample - controls fraction of observations that should be sampled at each iteration or subsample ratio of the training instance (as quoted from XGBoost's Python API reference via its [Scikit-learn API](https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn))
+Main parameters to tune as suggested by [@bruce2020]: 
 
-- eta or learning-rate (it's currently named as "learning_rate" in scikit-learn and XGBoost) - shrinkage factor applied to alpha in the boosting algorithm or it may be more easily understood as the boosting learning rate used to prevent overfitting
+- *subsample* - controls fraction of observations that should be sampled at each iteration or a subsample ratio of the training instance (as per [XGBoost's Scikit-learn API](https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn)). This is similar to how a random forest operates but without the sample replacement part
 
-In scikit-learn, there are two types of gradient boosted tree methods, GradientBoostingClassifer() and HistGradientBoostingClassifier() (note: regressors are also available), in its sklearn.ensemble module. One way to choose between them is to check sample size first. [GradientBoostingClassifer()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html#sklearn.ensemble.GradientBoostingClassifier) class is likely better when there is only a small sample size (e.g. when number of sample is less than 10,000), while [HistGradientBoostingClassifier()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.HistGradientBoostingClassifier.html#sklearn.ensemble.HistGradientBoostingClassifier) class is likely better when your sample size is at least 10,000+ or more. The HistGradientBoostingClassifier() is a histogram-based gradient boosting classification tree that is mainly inpired by [LightGBM](https://github.com/Microsoft/LightGBM). 
+- *eta* (in XGBoost) or *learning_rate* (in scikit-learn wrapper interface for XGBoost) - a shrinkage factor applied to alpha (a factor derived from weighted errors) in the boosting algorithm or it simply may be more easily understood as the boosting learning rate used to prevent overfitting
 
-Rather than making the introduction part too long in this post, please refer to this book by [@mlbook2022] for further details on tree models.
+There are of course a whole bunch of other [XGBoost parameters](https://xgboost.readthedocs.io/en/latest/parameter.html#xgboost-parameters) that can be tuned, and in order to keep this post at a very reasonable reading length, I won't go through every single one of them here, but please see this link as an example parameter set for [XGBClassifier()](https://xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBClassifier).
+
+In scikit-learn, there are also two types of gradient boosted tree methods, GradientBoostingClassifer() and HistGradientBoostingClassifier(), in its sklearn.ensemble module (note: equivalent regressor class also available). One way to choose between them is to check sample size first. [GradientBoostingClassifer()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html#sklearn.ensemble.GradientBoostingClassifier) class is likely better when there is only a small sample size (e.g. when number of sample is less than 10,000), while [HistGradientBoostingClassifier()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.HistGradientBoostingClassifier.html#sklearn.ensemble.HistGradientBoostingClassifier) class is likely better when your sample size is at least 10,000+ or more. The HistGradientBoostingClassifier() is a histogram-based gradient boosting classification tree that is mainly inpired by [LightGBM](https://github.com/Microsoft/LightGBM). 
 
 <br>
 
 ##### **A demo**
 
 In the example below, I decided to use only AdaBoostClassifier() and XGBClassifier() for now. Please note that the dataset used here is very small and the example is likely not going to reflect real-life use case completely (use with care). 
+
+<br>
+
+###### **Import libraries**
 
 ```{python}
 import sys
@@ -130,6 +136,10 @@ print(f"xgboost version used: {xgboost.__version__}\nscikit-learn version used: 
 print(sys.version)
 ```
 
+<br>
+
+###### **Data source**
+
 ```{python}
 from pathlib import Path
 
@@ -166,9 +176,11 @@ Exploring max phases of compounds in the dataset.
 df_ache.value_counts("max_phase")
 ```
 
-*Dealing with max_phase labelled "nan"*
+<br>
 
-The [definition of "nan" assigned to max_phase](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/drug-and-compound-questions#what-is-max-phase) indicated that compounds labelled as "nan" or "null" had no evidence showing they've reached clinical trials, so it would probably (depend on project goals) be best to remove them from the dataset.
+###### **Dealing with max_phase labelled "nan"**
+
+The [definition of "nan" assigned to max_phase](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/drug-and-compound-questions#what-is-max-phase) indicated that compounds labelled as "nan" or "null" had no evidence showing they've reached clinical trials, so it would probably (depend on project goals) be the best to remove them from the dataset.
 
 Removing all "nan" compounds in max_phase column.
 
@@ -189,18 +201,18 @@ df_ache[["max_phase"]].describe()
 
 <br>
 
-##### **Model building using pipeline**
+##### **Model building using scikit-learn's pipeline**
 
 Likely model forming steps:
 
-* Determine whether to use binary or multi-class classification
+1. Determine whether to use binary or multi-class classification
 
-Previously used binary classification, e.g. target as max_phase 4 ("1"), with rest max_phase -1, 1, 2, 3 as "0".
+    Previously used binary classification, e.g. target as max_phase 4 ("1"), with rest max_phase -1, 1, 2, 3 as "0".
 
-This time likely trying out multi-class classification to predict max_phase which contains -1, 1, 2, 3, 4 -> *check max_phase -1 (may need to remove?)*
+    This time likely trying out multi-class classification to predict max_phase which contains -1, 1, 2, 3, 4 -> *check max_phase -1 (may need to remove?)*
 
 
-* Define X, y
+2. Define X, y
 
 ```{python}
 X = list(df_ache.canonical_smiles)
@@ -211,9 +223,9 @@ y = list(df_ache.max_phase)
 X
 ```
 
-* SMILES sanitisation
+3. SMILES sanitisation
 
-This post is likely going to focus only on Scikit_mol which has a different way to handle SMILES errors. Another useful way to deal with SMILES errors is molpipeline's SMILES error handling, with an example shown in one of its notebooks - https://github.com/basf/MolPipeline/blob/main/notebooks/03_error_handling.ipynb. The main difference from what I could see was that molpipeline takes into account all the invalid SMILES by giving each invalid SMILES a "nan" label in the pipeline process - this maintains the matrix shape and good for tracking down the problematic SMILES (compounds).
+    This post is likely going to focus only on Scikit_mol which has a different way to handle SMILES errors. Another useful way to deal with SMILES errors is molpipeline's SMILES error handling, with an example shown in one of its notebooks - https://github.com/basf/MolPipeline/blob/main/notebooks/03_error_handling.ipynb. The main difference from what I could see was that molpipeline takes into account all the invalid SMILES by giving each invalid SMILES a "nan" label in the pipeline process - this maintains the matrix shape and good for tracking down the problematic SMILES (compounds).
 
 ```{python}
 checksmi = CheckSmilesSanitazion()
@@ -246,20 +258,23 @@ Generated a list of valid SMILES.
 y
 ```
 
-* Data splitting - randomly splitting data this time
+4. Data splitting
+
+    Randomly splitting data this time.
 
 ```{python}
 X_train, y_train, X_test, y_test = train_test_split(X_valid, y, test_size=0.2, random_state=3)
 ```
 
-* Create a pipeline using skit-learn
+5. Create a pipeline using skit-learn
 
-    - possibly chaining AdaBoostClassifier(), XGBClassifier(), along with Scikit-mol transformers
+    Possibly chaining AdaBoostClassifier(), XGBClassifier(), along with Scikit-mol transformers
 
-Links re. building pipeline in scikit-learn:
-- [Pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn-pipeline-pipeline)
+    Links re. building pipeline in scikit-learn:
 
-- [make_pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline) (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically)
+    - [Pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn-pipeline-pipeline)
+
+    - [make_pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline) (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically)
 
 ```{python}
 # Set parameters for adaboost model
@@ -281,8 +296,8 @@ params_xgboost = {
     "n_estimators": 100,
     "max_depth": 3,
     "objective": 'multi:softprob', 
-    "learning_rate": 0.2, 
-    "subsample":
+    "learning_rate": 0.1, 
+    "subsample": 0.5
 
     }
 
@@ -304,13 +319,14 @@ mlpipe = make_pipeline(
 ```
 
 
-    - Choosing data features for targets such as fingerprints (e.g. Morgan fingerprints best for larger dataset) or RDKit 2D descriptors (useful for smaller datasets) or others
+Choosing data features for targets such as fingerprints (e.g. Morgan fingerprints best for larger dataset) or RDKit 2D descriptors (useful for smaller datasets) or others
 
-    *Useful Jupyter notebook explaining when to best use parallel calculations to calculate molecular fingerprints and descriptors - https://github.com/EBjerrum/scikit-mol/blob/main/notebooks/07_parallel_transforms.ipynb*
+*Useful Jupyter notebook explaining when to best use parallel calculations to calculate molecular fingerprints and descriptors - https://github.com/EBjerrum/scikit-mol/blob/main/notebooks/07_parallel_transforms.ipynb*
 
-    - AdaBoost classifier (target: max_phase)
-    (likely not going to use regressor which uses pchembl_value, which is the -log of published activity values e.g. IC50 - [ChEMBL database link](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/chembl-data-questions#what-is-pchembl) that explains this)
+AdaBoost classifier (target: max_phase)
+(likely not going to use regressor which uses pchembl_value, which is the -log of published activity values e.g. IC50 - [ChEMBL database link](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/chembl-data-questions#what-is-pchembl) that explains this)
 
+6. Fit the model using the pipeline
 
 ```{python}
 # # apply the pipeline to training data
@@ -319,6 +335,8 @@ mlpipe = make_pipeline(
 # mlpipe.predict(y_test)
 ```
 
+7. Hyperparameter tuning (?shift to above prior to fitting model and building pipeline)
+
 ```{python}
 # Hyperparameter tuning
 ```
@@ -326,10 +344,10 @@ mlpipe = make_pipeline(
 
 Ideally, AdaBoost is not as useful as XGBoost (explained in [@mlbook2022]). So the focus on hyperparameter tuning will be on XGBoost. However, it contains a long list of parameters and one of the ways to find the most optimal set of parameters is via using cross-validation.
 
-
+8. Calculate metrics of the model
 
 ```{python}
 # Calculate metrics of the model
 ```
 
-Try using pickle to download model and parameters
+9. Pickle to download model and parameters
