@@ -266,7 +266,7 @@ y
 X_train, y_train, X_test, y_test = train_test_split(X_valid, y, test_size=0.2, random_state=3)
 ```
 
-5. Create a pipeline using skit-learn
+5. Create a pipeline using scikit-learn
 
     Possibly chaining AdaBoostClassifier(), XGBClassifier(), along with Scikit-mol transformers
 
@@ -335,10 +335,21 @@ AdaBoost classifier (target: max_phase)
 # mlpipe.predict(y_test)
 ```
 
-7. Hyperparameter tuning (?shift to above prior to fitting model and building pipeline)
+7. Hyperparameter tuning (*?shift to above prior to fitting model and building pipeline*)
+
+    For XGBoost, the main thing is to minimise model overfitting where several parameters play important roles to achieve this. For example, learning_rate and subsample are the first two mentioned previously, and another technique is based on regularisation that includes two other parameters, reg_alpha (L1 regularisation based on Manhattan distance) and reg_lamda (L2 regularisation based on Euclidean distance), which would penalise XGBoost's model complexity to make it a bit more conservative to reduce overfitting [@bruce2020].
 
 ```{python}
 # Hyperparameter tuning
+
+#XGBoost
+# n_estimators
+# max_depth
+# learning_rate
+# subsample
+# reg_lambda
+
+
 ```
 
 
