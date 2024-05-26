@@ -31,7 +31,9 @@ As quoted from [scikit-learn](https://scikit-learn.org/stable/modules/ensemble.h
 
 > ...fit a sequence of weak learners (i.e., models that are only slightly better than random guessing, such as small decision trees) on repeatedly modified versions of the data.
 
-Note: weak learner means an ensemble of very simple base classifiers such as decision tree stumps [@mlbook2022]
+::: {.callout-note}
+Weak learner means an ensemble of very simple base classifiers such as decision tree stumps [@mlbook2022]
+:::
 
 During the process of running the algorithm, increased weights are given to the incorrectly predicted samples at each iteration, and less weights are given to the correctly predicted ones. This then forces the AdaBoost models to focus more on the less accurately predicted samples with the aim to improve ensemble performance. The predictions from these iterations are combined to produce a final prediction via a weighted majority vote style, which is a well-known signature of tree models. Overall, AdaBoost algorithm can be used for classification or regression problems. The main difference between bagging and boosting is that boosting only uses random subsets of training samples drawn from the training dataset without any replacements [@mlbook2022]. One caveat to note is that AdaBoost tend to overfit training data (high variance).
 
@@ -82,7 +84,7 @@ Main parameters to tune as suggested by [@bruce2020]:
 
 - *eta* (in XGBoost) or *learning_rate* (in scikit-learn wrapper interface for XGBoost) - a shrinkage factor applied to alpha (a factor derived from weighted errors) in the boosting algorithm or it simply may be more easily understood as the boosting learning rate used to prevent overfitting
 
-There are of course a whole bunch of other [XGBoost parameters](https://xgboost.readthedocs.io/en/latest/parameter.html#xgboost-parameters) that can be tuned, and in order to keep this post at a very reasonable reading length, I won't go through every single one of them here, but please see this link as an example parameter set for [XGBClassifier()](https://xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBClassifier).
+There are of course a whole bunch of other [XGBoost parameters](https://xgboost.readthedocs.io/en/latest/parameter.html#xgboost-parameters) that can be tuned, and in order to keep this post at a reasonable reading length, I won't go through every single one of them, but see this link as an example parameter set for [XGBClassifier()](https://xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBClassifier).
 
 In scikit-learn, there are also two types of gradient boosted tree methods, GradientBoostingClassifer() and HistGradientBoostingClassifier(), in its sklearn.ensemble module (note: equivalent regressor class also available). One way to choose between them is to check sample size first. [GradientBoostingClassifer()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html#sklearn.ensemble.GradientBoostingClassifier) class is likely better when there is only a small sample size (e.g. when number of sample is less than 10,000), while [HistGradientBoostingClassifier()](https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.HistGradientBoostingClassifier.html#sklearn.ensemble.HistGradientBoostingClassifier) class is likely better when your sample size is at least 10,000+ or more. The HistGradientBoostingClassifier() is a histogram-based gradient boosting classification tree that is mainly inpired by [LightGBM](https://github.com/Microsoft/LightGBM). 
 
@@ -139,6 +141,8 @@ print(sys.version)
 <br>
 
 ###### **Data source**
+
+Based on ChEMBL database version 33 (as shown by the file name below, "chembl_d_ache_33"), which was downloaded from last post by using chembl_downloader.
 
 ```{python}
 from pathlib import Path
@@ -304,8 +308,8 @@ params_xgboost = {
     "max_depth": 3,
     "objective": 'multi:softprob', 
     "learning_rate": 0.1, 
-    "subsample": 0.5
-
+    "subsample": 0.5, 
+    "random_state": 2
     }
 
 # Building pipeline
@@ -336,14 +340,18 @@ mlpipe = make_pipeline(
 
 7. Hyperparameter tuning (*?shift to above prior to fitting model and building pipeline*)
 
-    For XGBoost, the main thing is to minimise model overfitting where several parameters play important roles to achieve this. For example, learning_rate and subsample are the first two mentioned previously, and another technique is based on regularisation that includes two other parameters, reg_alpha (L1 regularisation based on Manhattan distance) and reg_lamda (L2 regularisation based on Euclidean distance), which would penalise XGBoost's model complexity to make it a bit more conservative to reduce overfitting [@bruce2020].
+    For XGBoost, one of the main things is to minimise model overfitting where several parameters play important roles to achieve this. For example, *learning_rate* and *subsample* are the first two mentioned previously, and another technique is based on regularisation that includes two other parameters, *reg_alpha* (L1 regularisation based on Manhattan distance) and *reg_lamda* (L2 regularisation based on Euclidean distance), which would penalise XGBoost's model complexity to make it a bit more conservative to reduce overfitting [@bruce2020].
 
-    XGBoost contains a long list of parameters and one of the ways to find the most optimal set of parameters is using cross-validation.
+    XGBoost contains a long list of parameters and one of the ways to find the most optimal set of parameters is by using **cross-validation**.
+
+::: {.callout-note}
+To see the default values or types of each XGBoost parameter, this XGBoost documentation [link](https://xgboost.readthedocs.io/en/latest/parameter.html#xgboost-parameters) is useful (which could be cross-referenced with XGBoost's [Python API reference](https://xgboost.readthedocs.io/en/latest/python/python_api.html#python-api-reference) when needed).
+:::
 
 ```{python}
 # Hyperparameter tuning - searching for most optimal set of parameters to minimise errors
 
-#XGBoost
+#XGBoost parameters
 # n_estimators
 # max_depth
 # learning_rate
@@ -351,9 +359,11 @@ mlpipe = make_pipeline(
 # reg_lambda
 
 
+
+
 ```
 
-Ideally, AdaBoost is not as useful as XGBoost (as mentioned in [@mlbook2022]) in real-life use cases. 
+Ideally, AdaBoost is not as useful as XGBoost [@mlbook2022] in real-life use cases. 
 
 8. Calculate metrics of the model
 
