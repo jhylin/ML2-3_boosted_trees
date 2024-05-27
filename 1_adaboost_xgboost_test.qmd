@@ -107,6 +107,8 @@ import chembl_downloader
 from rdkit import Chem
 
 # Import Scikit_mol
+## Import smi2mol transformer
+from scikit_mol.conversions import SmilesToMolTransformer
 ## Check and clean SMILES
 from scikit_mol.utilities import CheckSmilesSanitazion
 ## Standardise molecules
@@ -116,15 +118,14 @@ from sklearn.preprocessing import StandardScaler
 ## Import fingerprints & descriptors
 from scikit_mol.fingerprints import MorganFingerprintTransformer
 from scikit_mol.descriptors import MolecularDescriptorTransformer
-## Import smi2mol transformer
-from scikit_mol.conversions import SmilesToMolTransformer
+
 
 # Import scikit-learn
 import sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import AdaBoostClassifier
+from sklearn.ensemble import AdaBoostClassifier, AdaBoostRegressor
 
 # Import xgboost classifier
 import xgboost
@@ -181,15 +182,12 @@ df_ache.value_counts("max_phase")
 ```
 
 ```{python}
-df_ache.value_counts("canonical_smiles", dropna=False)
+# Detect any missing values in the columns
+df_ache.isna().any()
 ```
 
 ```{python}
-# df_ache["canonical_smiles"].fillna("null", inplace=True)
-```
-
-```{python}
-# df_ache["canonical_smiles"] != "null"
+df_ache.fillna(0)
 ```
 
 <br>
@@ -229,6 +227,22 @@ Dataframe reduced to 101 (734) rows only.
 df_ache[["max_phase"]].describe()
 ```
 
+
+```{python}
+# Try binary class of max_phase first
+```
+
+```{python}
+from mol_prep import preprocess
+
+## Preprocess/standardise molecules
+# Running preprocess function 
+#df_ache = df_ache.copy()
+df_prep = df_ache.apply(preprocess, axis = 1)
+df_prep.head(3)
+```
+
+
 <br>
 
 ##### **Model building using scikit-learn's pipeline**
@@ -245,8 +259,8 @@ Likely model forming steps:
 2. Define X, y
 
 ```{python}
-X = list(df_ache.canonical_smiles)
-y = list(df_ache.max_phase)
+X = list(df_prep.rdkit_mol)
+y = list(df_prep.max_phase)
 ```
 
 ```{python}
@@ -258,48 +272,51 @@ print(X)
     This post is likely going to focus only on Scikit_mol which has a different way to handle SMILES errors. Another useful way to deal with SMILES errors is molpipeline's SMILES error handling, with an example shown in one of its notebooks - https://github.com/basf/MolPipeline/blob/main/notebooks/03_error_handling.ipynb. The main difference from what I could see was that molpipeline takes into account all the invalid SMILES by giving each invalid SMILES a "nan" label in the pipeline process - this maintains the matrix shape and good for tracking down the problematic SMILES (compounds).
 
 ```{python}
-checksmi = CheckSmilesSanitazion()
-# Checking on SMILES (X) only 
-X_valid, X_errors = checksmi.sanitize(X)
+# checksmi = CheckSmilesSanitazion()
+# # Checking on SMILES (X) only 
+# X_valid, X_errors = checksmi.sanitize(X)
 ```
 
 Ideally will be using X_valid & y_valid for further work (but this also means removing the invalids or errors completely from the training dataset). Another similar package, molpipeline - https://github.com/basf/MolPipeline might be of some use here, where its special feature is handling errors within the pipeline.
 
 ```{python}
-checksmi.errors
+# checksmi.errors
 ```
 
 No SMILES errors shown.
 
 ```{python}
-X_errors
+# X_errors
 ```
 
 Showed no outputs (no errors detected). 
 
 ```{python}
-print(X_valid)
+# print(X_valid)
 ```
 
 Generated a list of valid SMILES.
 
 ```{python}
-# Check on y variable
-print(y)
+# # Check on y variable
+# print(y)
 ```
 
 
 ```{python}
-# Check if there's any NaNs in canonical_smiles column
-print(f"{df_ache.canonical_smiles.isna().sum()} out of {len(df_ache)} SMILES failed in conversion")
+# # Check if there's any NaNs in canonical_smiles column
+print(f"{df_prep.standard_smiles.isna().sum()} out of {len(df_ache)} SMILES failed in conversion")
 ```
+
 
 4. Data splitting
 
     Randomly splitting data this time.
 
 ```{python}
-X_train, y_train, X_test, y_test = train_test_split(X_valid, y, test_size=0.2, random_state=3)
+# X_train, y_train, X_test, y_test = train_test_split(X_valid, y, test_size=0.2, random_state=3)
+
+X_train, y_train, X_test, y_test = train_test_split(df_prep.rdkit_mol, df_prep.max_phase, test_size=0.2, random_state=3)
 ```
 
 5. Create a pipeline using scikit-learn
@@ -318,6 +335,12 @@ X_train, y_train, X_test, y_test = train_test_split(X_valid, y, test_size=0.2, r
     - [Pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn-pipeline-pipeline)
 
     - [make_pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline) (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically)
+
+```{python}
+#Try a diff method to generate RDKit 2D descriptors
+
+```
+
 
 ```{python}
 # Set parameters for adaboost model
@@ -347,24 +370,29 @@ params_adaboost = {
 # Building pipeline
 mlpipe = make_pipeline(
     # Convert SMILES to RDKit molecules
-    SmilesToMolTransformer(), 
+    #SmilesToMolTransformer(), 
 
     # Molecule standardisations
-    Standardizer(),
+    #Standardizer(),
 
     # Generate RDKit2D descriptors (or MorganFingerprintTransformer()) for each molecule
-    MolecularDescriptorTransformer(),
+    #MolecularDescriptorTransformer(),
 
     # Scale variances in descriptor data
-    StandardScaler(),
+    #StandardScaler(),
 
     # Apply adaptive boost classifier
     AdaBoostClassifier(**params_adaboost)
+
     # Try applying xgboost classifier
     #XGBClassifier(**params_xgboost)
     )
 ```
 
+
+```{python}
+mlpipe
+```
 
 **might have to try my own mol_prep.py preprocessing script - one or more SMILES had problem with ring systems ?during SmilesToMolTransformer() or Standardizer()**
 
@@ -378,7 +406,7 @@ mlpipe.fit(X_train, y_train)
 
 ```{python}
 # use the pipeline to predict on testing data
-mlpipe.predict(y_test)
+#mlpipe.predict(y_test)
 ```
 
 7. Hyperparameter tuning (*?shift to above prior to fitting model and building pipeline*)

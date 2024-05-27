@@ -4,6 +4,7 @@ plot_adaboost_regression.ipynb
 1_adaboost_xgboost.html
 1-1_adaboost.html
 .DS_Store
+mol_prep.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
