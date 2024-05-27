@@ -199,7 +199,7 @@ The [definition of "nan" assigned to max_phase](https://chembl.gitbook.io/chembl
 Removing all "NaN" compounds in max_phase (target y variable) column.
 
 ```{python}
-df_ache.dropna(axis="index", subset=["max_phase", "canonical_smiles"], inplace=True)
+# df_ache.dropna(axis="index", subset=["max_phase", "canonical_smiles"], inplace=True)
 ```
 
 Check for any "NaNs" in the canonical SMILES column (X variable), since AdaBoostClassifier won't accept missing values in the dataset, but the HistGradientBoostingClassifier() (or the regressor) should take care of the native NaNs. There are other ways to deal with NaNs with a few examples provided by [scikit-learn](https://scikit-learn.org/stable/modules/impute.html). With regards to drug discovery data, there might be more caveats that need to be taken during data preprocessing (I'm also exploring this too). Since this is a simple demonstration only, I'll use the most basic strategy which is removing the whole row of data if any NaN is found within the X or y variables. The downside of this basic way of dealing with missing data is that you may end up losing some potentially useful or valuable data.
@@ -213,18 +213,31 @@ df_ache.drop_duplicates(subset=["canonical_smiles"], inplace=True)
 ```
 
 ```{python}
+print(df_ache.shape)
+df_ache
+```
+
+```{python}
 df_ache["canonical_smiles"].describe()
 ```
 
+Dataframe reduced to 5355 rows only.
+
 ```{python}
-print(df_ache.shape)
-df_ache.head()
+df_ache["max_phase"].describe()
 ```
 
-Dataframe reduced to 101 (734) rows only.
+```{python}
+df_ache.fillna({"max_phase": "null"}, inplace=True)
+df_ache
+```
 
 ```{python}
-df_ache[["max_phase"]].describe()
+df_ache["max_phase"].describe()
+```
+
+```{python}
+df_ache["canonical_smiles"].describe()
 ```
 
 ```{python}
@@ -235,6 +248,10 @@ from mol_prep import preprocess
 #df_ache = df_ache.copy()
 df_prep = df_ache.apply(preprocess, axis = 1)
 df_prep.head(3)
+```
+
+```{python}
+print(df_prep.shape)
 ```
 
 
@@ -309,24 +326,18 @@ print(f"{df_prep.standard_smiles.isna().sum()} out of {len(df_prep)} SMILES fail
 #Try a diff method to generate RDKit 2D descriptors
 from mol_prep import rdkit_2d_descriptors
 df_rd_2d = rdkit_2d_descriptors(df_prep)
+print(df_rd_2d.shape)
 df_rd_2d.head(3)
 ```
 
 ```{python}
-print(df_rd_2d.shape)
-```
+## **No need to merge dfs**
 
-```{python}
-print(df_prep.shape)
-df_prep.head(3)
-```
-
-```{python}
 #df_merged = df1.merge(df2, how='outer', left_index=True, right_index=True)
 
 
 # Merge dataframes df_prep & df_rd_2d via index
-df_merge = df_rd_2d.merge(df_prep, how="outer", left_index=True, right_index=True)
+# df_merge = df_rd_2d.merge(df_prep, how="outer", left_index=True, right_index=True)
 
 # df_merge = pd.merge(
 #     df_prep[["max_phase", "molecule_chembl_id"]],
@@ -335,39 +346,30 @@ df_merge = df_rd_2d.merge(df_prep, how="outer", left_index=True, right_index=Tru
 #     right_index=True
 # )
 
-print(df_merge.shape)
-df_merge.head(3)
-```
+# print(df_merge.shape)
+# df_merge.head(3)
 
-```{python}
 #joined_df = pd.concat([df1, df2], axis=1)
 
-df_concat = pd.concat([df_prep, df_rd_2d], axis=1)
-print(df_concat.shape)
-df_concat.head(3)
+# df_concat = pd.concat([df_prep, df_rd_2d], axis=1)
+# print(df_concat.shape)
+# df_concat.head(3)
 ```
 
 ```{python}
-df_merge["max_phase"].value_counts()
-```
+# Make y variable into a binary class (0, 1)
 
-```{python}
-df_merge
+
 ```
 
 ```{python}
 # Defining X (features) & y (target)
-X = df_merge.iloc[:, 1:]
-y = df_merge.iloc[:, 0]
+# Select all RDKit2D descriptors
+X = df_rd_2d.iloc[:, 0:]
+# Select max_phase col
+y = df_prep.iloc[]
 ```
 
-
-
-```{python}
-# Make y variable into a binary class
-
-
-```
 
 
 ```{python}
