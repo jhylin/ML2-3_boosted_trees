@@ -227,11 +227,6 @@ Dataframe reduced to 101 (734) rows only.
 df_ache[["max_phase"]].describe()
 ```
 
-
-```{python}
-# Try binary class of max_phase first
-```
-
 ```{python}
 from mol_prep import preprocess
 
@@ -259,12 +254,12 @@ Likely model forming steps:
 2. Define X, y
 
 ```{python}
-X = list(df_prep.rdkit_mol)
-y = list(df_prep.max_phase)
+# X = list(df_prep.rdkit_mol)
+# y = list(df_prep.max_phase)
 ```
 
 ```{python}
-print(X)
+# print(X)
 ```
 
 3. SMILES sanitisation
@@ -305,7 +300,82 @@ Generated a list of valid SMILES.
 
 ```{python}
 # # Check if there's any NaNs in canonical_smiles column
-print(f"{df_prep.standard_smiles.isna().sum()} out of {len(df_ache)} SMILES failed in conversion")
+print(f"{df_prep.standard_smiles.isna().sum()} out of {len(df_prep)} SMILES failed in conversion")
+```
+
+
+
+```{python}
+#Try a diff method to generate RDKit 2D descriptors
+from mol_prep import rdkit_2d_descriptors
+df_rd_2d = rdkit_2d_descriptors(df_prep)
+df_rd_2d.head(3)
+```
+
+```{python}
+print(df_rd_2d.shape)
+```
+
+```{python}
+print(df_prep.shape)
+df_prep.head(3)
+```
+
+```{python}
+#df_merged = df1.merge(df2, how='outer', left_index=True, right_index=True)
+
+
+# Merge dataframes df_prep & df_rd_2d via index
+df_merge = df_rd_2d.merge(df_prep, how="outer", left_index=True, right_index=True)
+
+# df_merge = pd.merge(
+#     df_prep[["max_phase", "molecule_chembl_id"]],
+#     df_rd_2d,
+#     left_index=True,
+#     right_index=True
+# )
+
+print(df_merge.shape)
+df_merge.head(3)
+```
+
+```{python}
+#joined_df = pd.concat([df1, df2], axis=1)
+
+df_concat = pd.concat([df_prep, df_rd_2d], axis=1)
+print(df_concat.shape)
+df_concat.head(3)
+```
+
+```{python}
+df_merge["max_phase"].value_counts()
+```
+
+```{python}
+df_merge
+```
+
+```{python}
+# Defining X (features) & y (target)
+X = df_merge.iloc[:, 1:]
+y = df_merge.iloc[:, 0]
+```
+
+
+
+```{python}
+# Make y variable into a binary class
+
+
+```
+
+
+```{python}
+print(X)
+```
+
+```{python}
+print(y)
 ```
 
 
@@ -316,7 +386,7 @@ print(f"{df_prep.standard_smiles.isna().sum()} out of {len(df_ache)} SMILES fail
 ```{python}
 # X_train, y_train, X_test, y_test = train_test_split(X_valid, y, test_size=0.2, random_state=3)
 
-X_train, y_train, X_test, y_test = train_test_split(df_prep.rdkit_mol, df_prep.max_phase, test_size=0.2, random_state=3)
+X_train, y_train, X_test, y_test = train_test_split(X, y, test_size=0.2, random_state=3)
 ```
 
 5. Create a pipeline using scikit-learn
@@ -335,11 +405,6 @@ X_train, y_train, X_test, y_test = train_test_split(df_prep.rdkit_mol, df_prep.m
     - [Pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn-pipeline-pipeline)
 
     - [make_pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline) (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically)
-
-```{python}
-#Try a diff method to generate RDKit 2D descriptors
-
-```
 
 
 ```{python}
