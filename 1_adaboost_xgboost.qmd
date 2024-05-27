@@ -181,7 +181,7 @@ df_ache.value_counts("max_phase")
 ```
 
 ```{python}
-df_ache.value_counts("canonical_smiles", dropna=False)
+#df_ache.value_counts("canonical_smiles")
 ```
 
 ```{python}
@@ -201,7 +201,7 @@ The [definition of "nan" assigned to max_phase](https://chembl.gitbook.io/chembl
 Removing all "NaN" compounds in max_phase (target y variable) column.
 
 ```{python}
-df_ache.dropna(axis="index", subset=["max_phase", "canonical_smiles"], inplace=True)
+df_ache.dropna(axis="index", subset=["max_phase"], inplace=True)
 ```
 
 Check for any "NaNs" in the canonical SMILES column (X variable), since AdaBoostClassifier won't accept missing values in the dataset, but the HistGradientBoostingClassifier() (or the regressor) should take care of the native NaNs. There are other ways to deal with NaNs with a few examples provided by [scikit-learn](https://scikit-learn.org/stable/modules/impute.html). With regards to drug discovery data, there might be more caveats that need to be taken during data preprocessing (I'm also exploring this too). Since this is a simple demonstration only, I'll use the most basic strategy which is removing the whole row of data if any NaN is found within the X or y variables. The downside of this basic way of dealing with missing data is that you may end up losing some potentially useful or valuable data.
@@ -252,6 +252,11 @@ y = list(df_ache.max_phase)
 ```{python}
 print(X)
 ```
+
+```{python}
+print(y)
+```
+
 
 3. SMILES sanitisation
 
@@ -320,6 +325,21 @@ X_train, y_train, X_test, y_test = train_test_split(X_valid, y, test_size=0.2, r
     - [make_pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline) (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically)
 
 ```{python}
+# descriptor = MolecularDescriptorTransformer()
+# available_descriptors = descriptor.available_descriptors
+# print(f"There are {len(available_descriptors)} available descriptors")
+# print(f"The first five descriptor names: {available_descriptors[:5]}")
+
+rdkit2d = MolecularDescriptorTransformer()
+available_descriptors = rdkit2d.available_descriptors
+print(f"First 10 descriptor names: {available_descriptors[:10]}")
+```
+
+```{python}
+# params_rdkit2d = {
+#     "desc_list":
+# }
+
 # Set parameters for adaboost model
 params_adaboost = {
     "estimator": DecisionTreeClassifier(max_depth = 3), 
@@ -353,7 +373,7 @@ mlpipe = make_pipeline(
     Standardizer(),
 
     # Generate RDKit2D descriptors (or MorganFingerprintTransformer()) for each molecule
-    MolecularDescriptorTransformer(),
+    MolecularDescriptorTransformer(desc_list=['HeavyAtomCount', 'FractionCSP3', 'RingCount', 'MolLogP', 'MolWt']),
 
     # Scale variances in descriptor data
     StandardScaler(),
@@ -365,9 +385,9 @@ mlpipe = make_pipeline(
     )
 ```
 
+**Check X, y variable sample numbers**
 
-**might have to try my own mol_prep.py preprocessing script - one or more SMILES had problem with ring systems ?during SmilesToMolTransformer() or Standardizer()**
-
+Note: can't use all 209 RDKit2D descriptors for AdaBoostClassifier() as some of the descriptors will be "0" and AdaBoostClassifier() won't take care of NaNs, so using a selection of descriptors only.
 
 6. Fit the model using the pipeline
 
