@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3.1 - AdaBoost, XGBoost and Scikit-mol"
 author: Jennifer HY Lin
-date: '2024-5-27'
+date: '2024-5-28'
 draft: true
 categories: 
     - Machine learning projects
@@ -92,7 +92,7 @@ In scikit-learn, there are also two types of gradient boosted tree methods, Grad
 
 ##### **A demo**
 
-In the example below, I decided to use only AdaBoostClassifier() and XGBClassifier() for now. Please note that the dataset used here is very small and the example is likely not going to reflect real-life use case completely (use with care). 
+In the example below, I'm only using AdaBoostClassifier() and XGBClassifier() for now. Please note that the dataset used here is very small and the example is likely not going to reflect real-life use case completely (use with care). 
 
 <br>
 
@@ -111,8 +111,6 @@ from rdkit import Chem
 from scikit_mol.utilities import CheckSmilesSanitazion
 ## Standardise molecules
 from scikit_mol.standardizer import Standardizer
-## Data scaler (variance scaling)
-from sklearn.preprocessing import StandardScaler
 ## Import fingerprints & descriptors
 from scikit_mol.fingerprints import MorganFingerprintTransformer
 from scikit_mol.descriptors import MolecularDescriptorTransformer
@@ -122,6 +120,8 @@ from scikit_mol.conversions import SmilesToMolTransformer
 # Import scikit-learn
 import sklearn
 from sklearn.model_selection import train_test_split
+## Data scaler (variance scaling)
+from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import make_pipeline
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
@@ -180,25 +180,13 @@ Exploring max phases of compounds in the dataset.
 df_ache.value_counts("max_phase")
 ```
 
-```{python}
-#df_ache.value_counts("canonical_smiles")
-```
-
-```{python}
-# df_ache["canonical_smiles"].fillna("null", inplace=True)
-```
-
-```{python}
-# df_ache["canonical_smiles"] != "null"
-```
-
 <br>
 
 ###### **Dealing with data labelled "nan"**
 
 The [definition of "nan" assigned to max_phase](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/drug-and-compound-questions#what-is-max-phase) indicated that compounds labelled as "nan" or "null" had no evidence showing they've reached clinical trials, so it would probably (depend on project goals) be the best to remove them from the dataset.
 
-Removing all "NaN" compounds in max_phase (target y variable) column.
+Removing all "NaN" or "null" compounds in max_phase (target y variable) column.
 
 ```{python}
 df_ache.dropna(axis="index", subset=["max_phase"], inplace=True)
@@ -207,15 +195,19 @@ df_ache.dropna(axis="index", subset=["max_phase"], inplace=True)
 Check for any "NaNs" in the canonical SMILES column (X variable), since AdaBoostClassifier won't accept missing values in the dataset, but the HistGradientBoostingClassifier() (or the regressor) should take care of the native NaNs. There are other ways to deal with NaNs with a few examples provided by [scikit-learn](https://scikit-learn.org/stable/modules/impute.html). With regards to drug discovery data, there might be more caveats that need to be taken during data preprocessing (I'm also exploring this too). Since this is a simple demonstration only, I'll use the most basic strategy which is removing the whole row of data if any NaN is found within the X or y variables. The downside of this basic way of dealing with missing data is that you may end up losing some potentially useful or valuable data.
 
 ```{python}
-df_ache["canonical_smiles"].describe()
-```
+# Suspected there might be missing SMILES earlier, but tested with an alternative method by running through mol_prep.py, and it went through without problems by generating RDKit mols. So commented off following code re. canonical_smiles
 
-```{python}
-df_ache.drop_duplicates(subset=["canonical_smiles"], inplace=True)
-```
+# df_ache["canonical_smiles"].describe()
 
-```{python}
-df_ache["canonical_smiles"].describe()
+#df_ache.value_counts("canonical_smiles")
+
+# df_ache["canonical_smiles"].fillna("null", inplace=True)
+
+# df_ache["canonical_smiles"] != "null"
+
+# df_ache.drop_duplicates(subset=["canonical_smiles"], inplace=True)
+
+# df_ache["canonical_smiles"].describe()
 ```
 
 ```{python}
@@ -223,11 +215,34 @@ print(df_ache.shape)
 df_ache.head()
 ```
 
-Dataframe reduced to 101 (734) rows only.
+Dataframe reduced to 734 rows only.
 
 ```{python}
-df_ache[["max_phase"]].describe()
+df_ache[["max_phase"]].value_counts()
 ```
+
+A max_phase of -1 is assigned with an unknown clinical phase status ([ChEMBL reference](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/drug-and-compound-questions#what-is-max-phase)), which I'm going to drop for this particular experiment.
+
+```{python}
+# Select only mols with max_phase of 0.5 and above
+df_ache = df_ache[(df_ache["max_phase"] >= 1)]
+```
+
+```{python}
+df_ache["max_phase"].describe()
+```
+
+```{python}
+df_ache["max_phase"].value_counts()
+```
+
+```{python}
+df_ache["max_phase"].dtypes
+
+# Convert from float to int
+
+```
+
 
 <br>
 
@@ -237,16 +252,16 @@ Likely model forming steps:
 
 1. Determine whether to use binary or multi-class classification
 
-    Previously used binary classification, e.g. target as max_phase 4 ("1"), with rest max_phase -1, 1, 2, 3 as "0".
+    Previously used binary classification, e.g. target as max_phase 4 ("1") and used max_phase of "null" as "0".
 
-    This time likely trying out multi-class classification to predict max_phase which contains -1, 1, 2, 3, 4 -> *check max_phase -1 (may need to remove?)*
+    This time likely trying out multi-class classification to predict max_phase which contains 0.5, 1, 2, 3, 4.
 
 
 2. Define X, y
 
 ```{python}
-X = list(df_ache.canonical_smiles)
-y = list(df_ache.max_phase)
+X = df_ache.canonical_smiles
+y = df_ache.max_phase
 ```
 
 ```{python}
@@ -289,12 +304,6 @@ print(X_valid)
 Generated a list of valid SMILES.
 
 ```{python}
-# Check on y variable
-print(y)
-```
-
-
-```{python}
 # Check if there's any NaNs in canonical_smiles column
 print(f"{df_ache.canonical_smiles.isna().sum()} out of {len(df_ache)} SMILES failed in conversion")
 ```
@@ -335,34 +344,37 @@ available_descriptors = rdkit2d.available_descriptors
 print(f"First 10 descriptor names: {available_descriptors[:10]}")
 ```
 
+**?Missing the "transform" step**
+
+
 ```{python}
 # params_rdkit2d = {
 #     "desc_list":
 # }
 
 # Set parameters for adaboost model
-params_adaboost = {
-    "estimator": DecisionTreeClassifier(max_depth = 3), 
-    # default: n_estimators = 50, learning_rate = 1.0 (trade-off between them)
-    "n_estimators": 80, 
-    "learning_rate": 0.2, 
-    # SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) algorithm 
-    # for multi-class classification
-    "algorithm": "SAMME", 
-    "random_state": 2
-    }
+# params_adaboost = {
+#     "estimator": DecisionTreeClassifier(max_depth = 3), 
+#     # default: n_estimators = 50, learning_rate = 1.0 (trade-off between them)
+#     "n_estimators": 80, 
+#     "learning_rate": 0.2, 
+#     # SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) algorithm 
+#     # for multi-class classification
+#     "algorithm": "SAMME", 
+#     "random_state": 2
+#     }
 
 # Set parameters for xgboost model
 # For multi-class classification, use softprob for loss function
 # https://xgboost.readthedocs.io/en/latest/parameter.html#learning-task-parameters
-# params_xgboost = {
-#     "n_estimators": 100,
-#     "max_depth": 3,
-#     "objective": 'multi:softprob', 
-#     "learning_rate": 0.1, 
-#     "subsample": 0.5, 
-#     "random_state": 2
-#     }
+params_xgboost = {
+    "n_estimators": 100,
+    "max_depth": 3,
+    "objective": 'multi:softprob', 
+    "learning_rate": 0.1, 
+    "subsample": 0.5, 
+    "random_state": 2
+    }
 
 # Building pipeline
 mlpipe = make_pipeline(
@@ -373,15 +385,16 @@ mlpipe = make_pipeline(
     Standardizer(),
 
     # Generate RDKit2D descriptors (or MorganFingerprintTransformer()) for each molecule
-    MolecularDescriptorTransformer(desc_list=['HeavyAtomCount', 'FractionCSP3', 'RingCount', 'MolLogP', 'MolWt']),
+    MolecularDescriptorTransformer(),
+    # desc_list=['HeavyAtomCount', 'FractionCSP3', 'RingCount', 'MolLogP', 'MolWt']
 
     # Scale variances in descriptor data
-    StandardScaler(),
+    #StandardScaler(),
 
     # Apply adaptive boost classifier
-    AdaBoostClassifier(**params_adaboost)
+    #AdaBoostClassifier(**params_adaboost)
     # Try applying xgboost classifier
-    #XGBClassifier(**params_xgboost)
+    XGBClassifier(**params_xgboost)
     )
 ```
 

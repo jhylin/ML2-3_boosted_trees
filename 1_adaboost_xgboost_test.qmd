@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3.1 - AdaBoost, XGBoost and Scikit-mol"
 author: Jennifer HY Lin
-date: '2024-5-27'
+date: '2024-5-28'
 draft: true
 categories: 
     - Machine learning projects
