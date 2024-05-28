@@ -237,12 +237,13 @@ df_ache["max_phase"].value_counts()
 ```
 
 ```{python}
-df_ache["max_phase"].dtypes
-
-# Convert from float to int
-
+# Convert max_phase from float to int
+df_ache = df_ache.astype({"max_phase": int, "canonical_smiles": "string"})
 ```
 
+```{python}
+df_ache.dtypes
+```
 
 <br>
 
@@ -344,37 +345,34 @@ available_descriptors = rdkit2d.available_descriptors
 print(f"First 10 descriptor names: {available_descriptors[:10]}")
 ```
 
-**?Missing the "transform" step**
-
-
 ```{python}
 # params_rdkit2d = {
 #     "desc_list":
 # }
 
 # Set parameters for adaboost model
-# params_adaboost = {
-#     "estimator": DecisionTreeClassifier(max_depth = 3), 
-#     # default: n_estimators = 50, learning_rate = 1.0 (trade-off between them)
-#     "n_estimators": 80, 
-#     "learning_rate": 0.2, 
-#     # SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) algorithm 
-#     # for multi-class classification
-#     "algorithm": "SAMME", 
-#     "random_state": 2
-#     }
+params_adaboost = {
+    "estimator": DecisionTreeClassifier(max_depth = 3), 
+    # default: n_estimators = 50, learning_rate = 1.0 (trade-off between them)
+    "n_estimators": 80, 
+    "learning_rate": 0.2, 
+    # SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) algorithm 
+    # for multi-class classification
+    "algorithm": "SAMME", 
+    "random_state": 2
+    }
 
 # Set parameters for xgboost model
 # For multi-class classification, use softprob for loss function
 # https://xgboost.readthedocs.io/en/latest/parameter.html#learning-task-parameters
-params_xgboost = {
-    "n_estimators": 100,
-    "max_depth": 3,
-    "objective": 'multi:softprob', 
-    "learning_rate": 0.1, 
-    "subsample": 0.5, 
-    "random_state": 2
-    }
+# params_xgboost = {
+#     "n_estimators": 100,
+#     "max_depth": 3,
+#     "objective": 'multi:softprob', 
+#     "learning_rate": 0.1, 
+#     "subsample": 0.5, 
+#     "random_state": 2
+#     }
 
 # Building pipeline
 mlpipe = make_pipeline(
@@ -394,11 +392,11 @@ mlpipe = make_pipeline(
     # Apply adaptive boost classifier
     #AdaBoostClassifier(**params_adaboost)
     # Try applying xgboost classifier
-    XGBClassifier(**params_xgboost)
+    # XGBClassifier(**params_xgboost)
     )
 ```
 
-**Check X, y variable sample numbers**
+**SOLVED (checked & changed dtypes for X, y) - Check X, y variable sample numbers**
 
 Note: can't use all 209 RDKit2D descriptors for AdaBoostClassifier() as some of the descriptors will be "0" and AdaBoostClassifier() won't take care of NaNs, so using a selection of descriptors only.
 
@@ -406,12 +404,16 @@ Note: can't use all 209 RDKit2D descriptors for AdaBoostClassifier() as some of 
 
 ```{python}
 # apply the pipeline to training data
-mlpipe.fit(X_train, y_train)
+model = mlpipe.fit(X_train, y_train)
 ```
+
+**So far fitting the data onto AdaBoostClassifier() worked above**
+
+**Check if this pipeline has "predict" property?**
 
 ```{python}
 # use the pipeline to predict on testing data
-mlpipe.predict(y_test)
+model.predict(y_test)
 ```
 
 7. Hyperparameter tuning (*?shift to above prior to fitting model and building pipeline*)
