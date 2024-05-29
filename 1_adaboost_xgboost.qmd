@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3.1 - AdaBoost, XGBoost and Scikit-mol"
 author: Jennifer HY Lin
-date: '2024-5-28'
+date: '2024-5-29'
 draft: true
 categories: 
     - Machine learning projects
@@ -142,7 +142,7 @@ print(sys.version)
 
 ###### **Data source**
 
-Based on ChEMBL database version 33 (as shown by the file name below, "chembl_d_ache_33"), which was downloaded from last post by using chembl_downloader.
+Data source is based on ChEMBL database version 33 (as shown by the file name below, "chembl_d_ache_33"), which was downloaded previously from last post (on [random forest classifier](https://jhylin.github.io/Data_in_life_blog/posts/17_ML2-2_Random_forest/2_random_forest_classifier.html)) by using [chembl_downloader](https://github.com/cthoyt/chembl-downloader).
 
 ```{python}
 from pathlib import Path
@@ -237,6 +237,14 @@ df_ache["max_phase"].value_counts()
 ```
 
 ```{python}
+df_ache.dtypes
+```
+
+```{python}
+# df_ache = df_ache.convert_dtypes().dtypes
+```
+
+```{python}
 # Convert max_phase from float to int
 df_ache = df_ache.astype({"max_phase": int, "canonical_smiles": "string"})
 ```
@@ -263,6 +271,14 @@ Likely model forming steps:
 ```{python}
 X = df_ache.canonical_smiles
 y = df_ache.max_phase
+```
+
+```{python}
+X.shape
+```
+
+```{python}
+y.shape
 ```
 
 ```{python}
@@ -351,16 +367,16 @@ print(f"First 10 descriptor names: {available_descriptors[:10]}")
 # }
 
 # Set parameters for adaboost model
-params_adaboost = {
-    "estimator": DecisionTreeClassifier(max_depth = 3), 
-    # default: n_estimators = 50, learning_rate = 1.0 (trade-off between them)
-    "n_estimators": 80, 
-    "learning_rate": 0.2, 
-    # SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) algorithm 
-    # for multi-class classification
-    "algorithm": "SAMME", 
-    "random_state": 2
-    }
+# params_adaboost = {
+#     "estimator": DecisionTreeClassifier(max_depth = 3), 
+#     # default: n_estimators = 50, learning_rate = 1.0 (trade-off between them)
+#     "n_estimators": 80, 
+#     "learning_rate": 0.2, 
+#     # SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) algorithm 
+#     # for multi-class classification
+#     "algorithm": "SAMME", 
+#     "random_state": 2,
+#     }
 
 # Set parameters for xgboost model
 # For multi-class classification, use softprob for loss function
@@ -383,37 +399,91 @@ mlpipe = make_pipeline(
     Standardizer(),
 
     # Generate RDKit2D descriptors (or MorganFingerprintTransformer()) for each molecule
-    MolecularDescriptorTransformer(),
+    #MorganFingerprintTransformer(),
+
+    # MolecularDescriptorTransformer(desc_list=['HeavyAtomCount', 'FractionCSP3', 'RingCount', 'MolLogP', 'MolWt']),
     # desc_list=['HeavyAtomCount', 'FractionCSP3', 'RingCount', 'MolLogP', 'MolWt']
 
     # Scale variances in descriptor data
-    #StandardScaler(),
+    # StandardScaler(),
 
     # Apply adaptive boost classifier
-    #AdaBoostClassifier(**params_adaboost)
+    # **params_adaboost
+    # AdaBoostClassifier()
     # Try applying xgboost classifier
     # XGBClassifier(**params_xgboost)
     )
 ```
 
-**SOLVED (checked & changed dtypes for X, y) - Check X, y variable sample numbers**
+```{python}
+# Check on SmilesToMolTransformer()
+smitomol = mlpipe.transform(X_train)
+smitomol
+
+## appeared to have converted all cpds to RDKit mols
+```
+
+```{python}
+# Check on Standardizer()
+standard = mlpipe.transform(X_train)
+standard
+
+## appeared to have all RDKit mols standardised
+```
+
+```{python}
+type(standard)
+```
+
+```{python}
+# Dissect problem using base RDKit code
+from rdkit.Chem import Descriptors
+
+```
+
+**Problem with cpd feature generation**
+
+```{python}
+# Test on Morgan fingerprints
+morgan = mlpipe.transform(X_train)
+
+## Problem with ring info
+```
+
+```{python}
+# Check on RDKit2D descriptors from the transformer first
+
+# df_fingerprints = fingerprints_pipeline.transform(smis_train)
+# df_fingerprints
+
+rdkit2d_desc = mlpipe.transform(X_train)
+rdkit2d_desc
+
+## Problem with ring info
+```
+
+
+**X (n_sample, n_features) - missing n_features but should be generated in MolecularDescriptorTransformer()?**
+
+**Problem with "Found input variables with inconsistent numbers of samples: [531, 133]"**
 
 Note: can't use all 209 RDKit2D descriptors for AdaBoostClassifier() as some of the descriptors will be "0" and AdaBoostClassifier() won't take care of NaNs, so using a selection of descriptors only.
 
 6. Fit the model using the pipeline
 
 ```{python}
-# apply the pipeline to training data
-model = mlpipe.fit(X_train, y_train)
+# Check on pipeline
+mlpipe
 ```
 
-**So far fitting the data onto AdaBoostClassifier() worked above**
-
-**Check if this pipeline has "predict" property?**
+```{python}
+# apply the pipeline to training data
+mlpipe.fit(X_train, y_train)
+```
 
 ```{python}
 # use the pipeline to predict on testing data
-model.predict(y_test)
+mlpipe.predict(y_test)
 ```
 
 7. Hyperparameter tuning (*?shift to above prior to fitting model and building pipeline*)
