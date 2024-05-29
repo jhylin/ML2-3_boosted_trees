@@ -538,10 +538,7 @@ Failed Expression: df_init
 ## Problem with ring info
 ```
 
-
-**X (n_sample, n_features) - missing n_features but should be generated in MolecularDescriptorTransformer()?**
-
-**Problem with "Found input variables with inconsistent numbers of samples: [531, 133]"**
+**SOLVED by realising not naming X, y train/test data correctly - Problem with "Found input variables with inconsistent numbers of samples: [531, 133]"**
 
 Note: can't use all 209 RDKit2D descriptors for AdaBoostClassifier() as some of the descriptors will be "0" and AdaBoostClassifier() won't take care of NaNs, so using a selection of descriptors only.
 
