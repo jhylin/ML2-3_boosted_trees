@@ -269,18 +269,65 @@ Likely model forming steps:
 2. Define X, y
 
 ```{python}
-df_ache
+print(df_ache.shape)
+```
+
+
+```{python}
+## Trial own mol_prep.py script
+from mol_prep import preprocess, rdkit_2d_descriptors
 ```
 
 ```{python}
-X = df_ache.canonical_smiles
-y = df_ache.max_phase
+# Convert canonical_smiles into rdkit_mol
+## Preprocess/standardise molecules
+# Running preprocess function 
+df_ache = df_ache.copy()
+df_prep = df_ache.apply(preprocess, axis = 1)
+print(df_prep.shape)
+df_prep.head(3)
 ```
 
 ```{python}
-X
+## Generate RDKit 2D descriptors/fingerprints
+# Running rdkit_2d_descriptors function
+df_2d = rdkit_2d_descriptors(df_prep)
+df_2d.head(3)
 ```
 
+```{python}
+# Join df_2d & df_prep
+
+# pd.merge(df1, df2, left_index=True, right_index=True)
+
+df_merge = pd.merge(df_prep, df_2d, left_index=True, right_index=True)
+```
+
+```{python}
+print(df_merge.shape)
+df_merge.head()
+```
+
+```{python}
+df_merge.dropna(axis="index", how="any", inplace=True)
+```
+
+```{python}
+print(df_merge.shape)
+```
+
+```{python}
+list(df_merge.columns)
+```
+
+```{python}
+X = df_merge.iloc[:, 14:19]
+y = df_merge.max_phase
+```
+
+```{python}
+type(X)
+```
 
 ```{python}
 X.shape
@@ -304,34 +351,34 @@ print(y)
     This post is likely going to focus only on Scikit_mol which has a different way to handle SMILES errors. Another useful way to deal with SMILES errors is molpipeline's SMILES error handling, with an example shown in one of its notebooks - https://github.com/basf/MolPipeline/blob/main/notebooks/03_error_handling.ipynb. The main difference from what I could see was that molpipeline takes into account all the invalid SMILES by giving each invalid SMILES a "nan" label in the pipeline process - this maintains the matrix shape and good for tracking down the problematic SMILES (compounds).
 
 ```{python}
-checksmi = CheckSmilesSanitazion()
-# Checking on SMILES (X) only 
-X_valid, X_errors = checksmi.sanitize(X)
+# checksmi = CheckSmilesSanitazion()
+# # Checking on SMILES (X) only 
+# X_valid, X_errors = checksmi.sanitize(X)
 ```
 
 Ideally will be using X_valid & y_valid for further work (but this also means removing the invalids or errors completely from the training dataset). Another similar package, molpipeline - https://github.com/basf/MolPipeline might be of some use here, where its special feature is handling errors within the pipeline.
 
 ```{python}
-checksmi.errors
+# checksmi.errors
 ```
 
 No SMILES errors shown.
 
 ```{python}
-X_errors
+# X_errors
 ```
 
 Showed no outputs (no errors detected). 
 
 ```{python}
-print(X_valid)
+# print(X_valid)
 ```
 
 Generated a list of valid SMILES.
 
 ```{python}
 # Check if there's any NaNs in canonical_smiles column
-print(f"{df_ache.canonical_smiles.isna().sum()} out of {len(df_ache)} SMILES failed in conversion")
+# print(f"{df_ache.canonical_smiles.isna().sum()} out of {len(df_ache)} SMILES failed in conversion")
 ```
 
 4. Data splitting
@@ -339,19 +386,43 @@ print(f"{df_ache.canonical_smiles.isna().sum()} out of {len(df_ache)} SMILES fai
     Randomly splitting data this time.
 
 ```{python}
-# X = X.to_numpy()
-# y = y.to_numpy()
+X = X.to_numpy()
+y = y.to_numpy()
 ```
 
 ```{python}
-# type(X)
+type(X)
 ```
 
 ```{python}
-# Found a silly error when naming X, y train/test sets!
 # X_train, X_test, y_train, y_test
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=3)
 ```
+
+```{python}
+y_train.shape
+```
+
+```{python}
+y_test.shape
+```
+
+---Use individual estimator (rather than pipeline)---
+
+```{python}
+model = AdaBoostClassifier(n_estimators=100, algorithm="SAMME", random_state=0)
+
+model.fit(X_train, y_train)
+```
+
+```{python}
+model.predict(X_test)
+```
+
+**Confirmed single estimator was able to be fitted with training data and also able to predict on X_test**
+
+
+
 
 5. Create a pipeline using scikit-learn
 
@@ -389,16 +460,16 @@ print(f"First 10 descriptor names: {available_descriptors[:10]}")
 # }
 
 # Set parameters for adaboost model
-params_adaboost = {
-    "estimator": DecisionTreeClassifier(max_depth = 3), 
-    # default: n_estimators = 50, learning_rate = 1.0 (trade-off between them)
-    "n_estimators": 80, 
-    "learning_rate": 0.2, 
-    # SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) algorithm 
-    # for multi-class classification
-    "algorithm": "SAMME", 
-    "random_state": 2,
-    }
+# params_adaboost = {
+#     "estimator": DecisionTreeClassifier(max_depth = 3), 
+#     # default: n_estimators = 50, learning_rate = 1.0 (trade-off between them)
+#     "n_estimators": 80, 
+#     "learning_rate": 0.2, 
+#     # SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) algorithm 
+#     # for multi-class classification
+#     "algorithm": "SAMME", 
+#     "random_state": 2,
+#     }
 
 # Set parameters for xgboost model
 # For multi-class classification, use softprob for loss function
@@ -413,17 +484,17 @@ params_adaboost = {
 #     }
 
 # Building pipeline
-mlpipe = make_pipeline(
+#mlpipe = make_pipeline(
     # Convert SMILES to RDKit molecules
-    SmilesToMolTransformer(), 
+    #SmilesToMolTransformer(), 
 
     # Molecule standardisations
-    Standardizer(),
+    #Standardizer(),
 
     # Generate RDKit2D descriptors (or MorganFingerprintTransformer()) for each molecule
     #MorganFingerprintTransformer(),
 
-    MolecularDescriptorTransformer(desc_list=['HeavyAtomCount', 'FractionCSP3', 'RingCount', 'MolLogP', 'MolWt']),
+    # MolecularDescriptorTransformer(desc_list=['qed']),
     # desc_list=['HeavyAtomCount', 'FractionCSP3', 'RingCount', 'MolLogP', 'MolWt']
 
     # Scale variances in descriptor data
@@ -431,10 +502,10 @@ mlpipe = make_pipeline(
 
     # Apply adaptive boost classifier
     # **params_adaboost
-    AdaBoostClassifier(**params_adaboost)
+    #AdaBoostClassifier()
     # Try applying xgboost classifier
     # XGBClassifier(**params_xgboost)
-)
+    
 ```
 
 
@@ -452,25 +523,25 @@ Failed Expression: df_init
 
 ```{python}
 # Generate a molecule feature pipeline
-# desc_pipe = make_pipeline(
-#     SmilesToMolTransformer(),
-#     Standardizer(),
-#     #MorganFingerprintTransformer(),
-#     MolecularDescriptorTransformer(desc_list=['HeavyAtomCount', 'FractionCSP3', 'RingCount', 'MolLogP', 'MolWt']),
-# )
-# desc_pipe.set_output(transform="pandas")
+desc_pipe = make_pipeline(
+    SmilesToMolTransformer(),
+    Standardizer(),
+    #MorganFingerprintTransformer(),
+    MolecularDescriptorTransformer(desc_list=['HeavyAtomCount', 'FractionCSP3', 'RingCount', 'MolLogP', 'MolWt']),
+)
+desc_pipe.set_output(transform="pandas")
 
-# mol_desc = desc_pipe.transform(X_train)
-# mol_desc
+mol_desc = desc_pipe.transform(X_train)
+mol_desc
 ```
 
 ```{python}
-# mol_desc = mol_desc.to_numpy()
-# mol_desc
+mol_desc = mol_desc.to_numpy()
+mol_desc
 ```
 
 ```{python}
-# type(mol_desc)
+type(mol_desc)
 ```
 
 
@@ -479,27 +550,27 @@ Failed Expression: df_init
 
 ```{python}
 # Check on SmilesToMolTransformer()
-# smitomol = mlpipe.transform(X_train)
-# smitomol
+smitomol = mlpipe.transform(X_train)
+smitomol
 
 ## appeared to have converted all cpds to RDKit mols
 ```
 
 ```{python}
 # Check on Standardizer()
-# standard = mlpipe.transform(X_train)
-# standard
+standard = mlpipe.transform(X_train)
+standard
 
 ## appeared to have all RDKit mols standardised
 ```
 
 ```{python}
-# type(standard)
+type(standard)
 ```
 
 ```{python}
 # Dissect problem using base RDKit code
-# from rdkit.Chem import Descriptors
+from rdkit.Chem import Descriptors
 
 
 # descrs = [Descriptors.CalcMolDescriptors(mol) for mol in mols]
@@ -510,21 +581,22 @@ Failed Expression: df_init
 
 # df.head(3)
 
-# desc = [Descriptors.CalcMol]
+desc = [Descriptors.CalcMol]
 
 ```
 
 
+
+```
 
 **Problem with cpd feature generation**
 
 ```{python}
 # Test on Morgan fingerprints
-#morgan = mlpipe.transform(X_train)
+morgan = mlpipe.transform(X_train)
 
 ## Problem with ring info
 ```
-
 
 ```{python}
 # Check on RDKit2D descriptors from the transformer first
@@ -532,8 +604,8 @@ Failed Expression: df_init
 # df_fingerprints = fingerprints_pipeline.transform(smis_train)
 # df_fingerprints
 
-# rdkit2d_desc = mlpipe.transform(X_train)
-# rdkit2d_desc
+rdkit2d_desc = mlpipe.transform(X_train)
+rdkit2d_desc
 
 ## Problem with ring info
 ```
@@ -553,27 +625,14 @@ mlpipe
 ```
 
 ```{python}
-# Attempt to disable RDKit loggings - not working yet
-from rdkit import RDLogger
-RDLogger.DisableLog('rdApp.info')
-```
-
-```{python}
 # apply the pipeline to training data
 mlpipe.fit(X_train, y_train)
 ```
 
 ```{python}
 # use the pipeline to predict on testing data
-mlpipe.predict(X_test)
+mlpipe.predict(y_test)
 ```
-
-**29/5/24 - Able to use scikit_mol's transformers in scikit_learn's pipeline on AdaBoostClassifer, although there are a long list of RDKit-related error messages! Able to fit and predict on X_train, y_train & X_test data**
-
-
-
-
-
 
 7. Hyperparameter tuning (*?shift to above prior to fitting model and building pipeline*)
 
