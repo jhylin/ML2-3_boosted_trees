@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3.1 - AdaBoost, XGBoost and Scikit-mol"
 author: Jennifer HY Lin
-date: '2024-5-29'
+date: '2024-5-30'
 draft: true
 categories: 
     - Machine learning projects
@@ -193,24 +193,7 @@ df_ache.dropna(axis="index", subset=["max_phase"], inplace=True)
 ```
 
 **May remove paragraph below**
-
 *Check for any "NaNs" in the canonical SMILES column (X variable), since AdaBoostClassifier won't accept missing values in the dataset, but the HistGradientBoostingClassifier() (or the regressor) should take care of the native NaNs. There are other ways to deal with NaNs with a few examples provided by [scikit-learn](https://scikit-learn.org/stable/modules/impute.html). With regards to drug discovery data, there might be more caveats that need to be taken during data preprocessing (I'm also exploring this too). Since this is a simple demonstration only, I'll use the most basic strategy which is removing the whole row of data if any NaN is found within the X or y variables. The downside of this basic way of dealing with missing data is that you may end up losing some potentially useful or valuable data.*
-
-```{python}
-# Suspected there might be missing SMILES earlier, but tested with an alternative method by running through mol_prep.py, and it went through without problems by generating RDKit mols. So commented off following code re. canonical_smiles
-
-# df_ache["canonical_smiles"].describe()
-
-#df_ache.value_counts("canonical_smiles")
-
-# df_ache["canonical_smiles"].fillna("null", inplace=True)
-
-# df_ache["canonical_smiles"] != "null"
-
-# df_ache.drop_duplicates(subset=["canonical_smiles"], inplace=True)
-
-# df_ache["canonical_smiles"].describe()
-```
 
 ```{python}
 print(df_ache.shape)
@@ -240,10 +223,6 @@ df_ache["max_phase"].value_counts()
 
 ```{python}
 df_ache.dtypes
-```
-
-```{python}
-# df_ache = df_ache.convert_dtypes().dtypes
 ```
 
 ```{python}
@@ -279,11 +258,6 @@ df_ache
 X = df_ache.canonical_smiles
 y = df_ache.max_phase
 ```
-
-```{python}
-X
-```
-
 
 ```{python}
 X.shape
@@ -342,18 +316,9 @@ print(f"{df_ache.canonical_smiles.isna().sum()} out of {len(df_ache)} SMILES fai
     Randomly splitting data this time.
 
 ```{python}
-# X = X.to_numpy()
-# y = y.to_numpy()
-```
-
-```{python}
-# type(X)
-```
-
-```{python}
 # Found a silly error when naming X, y train/test sets!
 # X_train, X_test, y_train, y_test
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=3)
+X_train, X_test, y_train, y_test = train_test_split(X_valid, y, test_size=0.2, random_state=3)
 ```
 
 5. Create a pipeline using scikit-learn
@@ -373,22 +338,21 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_
 
     - [make_pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline) (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically)
 
-```{python}
-# descriptor = MolecularDescriptorTransformer()
-# available_descriptors = descriptor.available_descriptors
-# print(f"There are {len(available_descriptors)} available descriptors")
-# print(f"The first five descriptor names: {available_descriptors[:5]}")
+This is also the time to think about generating features for model training. For RDKit 2D descriptors, scikit_mol has a nice way of quickly identifying what are available based on RDKit's [rdkit.Chem.Descriptors module](https://www.rdkit.org/docs/source/rdkit.Chem.Descriptors.html#module-rdkit.Chem.Descriptors) and [rdkit.ML.Descriptors.MoleculeDescriptors module](https://www.rdkit.org/docs/source/rdkit.ML.Descriptors.MoleculeDescriptors.html#rdkit.ML.Descriptors.MoleculeDescriptors.MolecularDescriptorCalculator).
 
+```{python}
 rdkit2d = MolecularDescriptorTransformer()
 available_descriptors = rdkit2d.available_descriptors
 print(f"First 10 descriptor names: {available_descriptors[:10]}")
 ```
 
-Note: can't use all 209 RDKit2D descriptors for AdaBoostClassifier() as some of the descriptors will be "0" and AdaBoostClassifier() won't take care of NaNs, so using a selection of descriptors only.
+Note: can't use all 209 RDKit2D descriptors for AdaBoostClassifier() as some of the descriptors will be "0" and AdaBoostClassifier() won't take care of NaNs, so using a selection of descriptors only (but HistGradientBoostingClassifier() should be able to take into account of NaNs).
 
 ---Original pipeline---
 
-**30/5/24: Change of plan - to remove XGBoost classifier from mlpipe since planning to do a CV to look for optimal parameters. Demo at least showed an AdaBoost classifier model that will work by using either Morgan fingerprints and RDKit 2D descriptors on this tiny dataset of mols**
+**30/5/24: Change of plan - build a separate XGBoost classifier pipeline since planning to do a CV to look for optimal parameters. Demo at least showed an AdaBoost classifier model that will work by using either Morgan fingerprints and RDKit 2D descriptors on this tiny dataset of mols**
+
+Here's an example of building a scikit_learn pipeline by using AdaBoostClassifier model, along with scikit_mol's transformers, for multi-class max_phase predictions (training set consists of max_phase 1, 2, 3 and 4).
 
 ```{python}
 # params_rdkit2d = {
@@ -425,6 +389,25 @@ mlpipe_adaboost = make_pipeline(
 )
 ```
 
+6. Fit the model using the pipeline
+
+```{python}
+# Check on pipeline
+mlpipe_adaboost
+```
+
+```{python}
+# apply the pipeline to training data
+mlpipe_adaboost.fit(X_train, y_train)
+```
+
+```{python}
+# use the pipeline to predict on testing data
+mlpipe_adaboost.predict(X_test)
+```
+
+**29/5/24 - Able to use scikit_mol's transformers in scikit_learn's pipeline on AdaBoostClassifer, although there are a long list of RDKit-related error messages! Able to fit and predict on X_train, y_train & X_test data**
+
 The following code snippet is an example of a scikit_learn pipeline using scikit_mol's transformers and XGBClassifier().
 
 ```{{python}}
@@ -458,131 +441,12 @@ mlpipe_xgb = make_pipeline(
     # Scale variances in descriptor data
     StandardScaler(),
 
-    # Try applying xgboost classifier
+    # XGBoost classifier
     XGBClassifier(**params_xgboost)
 )
 ```
 
----Testing a molecule feature pipeline---
-
-Generated an error message:
-
-****
-Pre-condition Violation
-RingInfo not initialized
-Violation occurred on line 129 in file /Users/runner/work/rdkit-pypi/rdkit-pypi/build/temp.macosx-10.9-x86_64-cpython-311/rdkit/Code/GraphMol/RingInfo.cpp
-Failed Expression: df_init
-****
-
-```{python}
-# Generate a molecule feature pipeline
-# desc_pipe = make_pipeline(
-#     SmilesToMolTransformer(),
-#     Standardizer(),
-#     #MorganFingerprintTransformer(),
-#     MolecularDescriptorTransformer(desc_list=['HeavyAtomCount', 'FractionCSP3', 'RingCount', 'MolLogP', 'MolWt']),
-# )
-# desc_pipe.set_output(transform="pandas")
-
-# mol_desc = desc_pipe.transform(X_train)
-# mol_desc
-```
-
-```{python}
-# mol_desc = mol_desc.to_numpy()
-# mol_desc
-```
-
-```{python}
-# type(mol_desc)
-```
-
-
-
----Tests---
-
-```{python}
-# Check on SmilesToMolTransformer()
-# smitomol = mlpipe.transform(X_train)
-# smitomol
-
-## appeared to have converted all cpds to RDKit mols
-```
-
-```{python}
-# Check on Standardizer()
-# standard = mlpipe.transform(X_train)
-# standard
-
-## appeared to have all RDKit mols standardised
-```
-
-```{python}
-# type(standard)
-```
-
-```{python}
-# Dissect problem using base RDKit code (example below from RDKit)
-
-# from rdkit.Chem import Descriptors
-# descrs = [Descriptors.CalcMolDescriptors(mol) for mol in mols]
-# df = pandas.DataFrame(descrs)
-# df.head(3)
-```
-
-**?Problem with cpd feature generation**
-
-```{python}
-# Test on Morgan fingerprints
-#morgan = mlpipe.transform(X_train)
-
-## Problem with ring info
-```
-
-
-```{python}
-# Check on RDKit2D descriptors from the transformer first
-
-# df_fingerprints = fingerprints_pipeline.transform(smis_train)
-# df_fingerprints
-
-# rdkit2d_desc = mlpipe.transform(X_train)
-# rdkit2d_desc
-
-## Problem with ring info
-```
-
-**SOLVED by realising not naming X, y train/test data in correct order - Error message: "Found input variables with inconsistent numbers of samples: [531, 133]"**
-
-6. Fit the model using the pipeline
-
-```{python}
-# Check on pipeline
-mlpipe_adaboost
-```
-
-```{python}
-# Attempt to disable RDKit loggings - not working yet
-# from rdkit import RDLogger
-# RDLogger.DisableLog('rdApp.info')
-```
-
-```{python}
-# apply the pipeline to training data
-mlpipe_adaboost.fit(X_train, y_train)
-```
-
-```{python}
-# use the pipeline to predict on testing data
-mlpipe_adaboost.predict(X_test)
-```
-
-**29/5/24 - Able to use scikit_mol's transformers in scikit_learn's pipeline on AdaBoostClassifer, although there are a long list of RDKit-related error messages! Able to fit and predict on X_train, y_train & X_test data**
-
-
-
-
-7. Hyperparameter tuning (*?shift to above prior to fitting model and building pipeline*)
+7. Hyperparameter tuning for XGBoost classifier
 
     For XGBoost, one of the main things is to minimise model overfitting where several parameters play important roles to achieve this. For example, *learning_rate* and *subsample* are the first two mentioned previously, and another technique is based on regularisation that includes two other parameters, *reg_alpha* (L1 regularisation based on Manhattan distance) and *reg_lamda* (L2 regularisation based on Euclidean distance), which would penalise XGBoost's model complexity to make it a bit more conservative to reduce overfitting [@bruce2020].
 
@@ -616,16 +480,16 @@ To see the default values or types of each XGBoost parameter, this XGBoost docum
 # Below function code borrowed from this notebook
 # https://github.com/EBjerrum/scikit-mol/blob/main/notebooks/10_pipeline_pandas_output.ipynb
 
-def compute_metrics(y_true, y_pred):
-    result = {
-        "RMSE": mean_squared_error(y_true=y_true, y_pred=y_pred, squared=False),
-        "MAE": mean_absolute_error(y_true=y_true, y_pred=y_pred),
-        "R2": r2_score(y_true=y_true, y_pred=y_pred),
-    }
-    return result
+# def compute_metrics(y_true, y_pred):
+#     result = {
+#         "RMSE": mean_squared_error(y_true=y_true, y_pred=y_pred, squared=False),
+#         "MAE": mean_absolute_error(y_true=y_true, y_pred=y_pred),
+#         "R2": r2_score(y_true=y_true, y_pred=y_pred),
+#     }
+#     return result
 
-performance = compute_metrics(y_true=target_test, y_pred=pred_test)
-performance
+# performance = compute_metrics(y_true=target_test, y_pred=pred_test)
+# performance
 
 
 ```
