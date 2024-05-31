@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3.1 - AdaBoost, XGBoost and Scikit-mol"
 author: Jennifer HY Lin
-date: '2024-5-30'
+date: '2024-5-31'
 draft: true
 categories: 
     - Machine learning projects
@@ -177,20 +177,14 @@ df_ache.head()
 Exploring max phases of compounds in the dataset.
 
 ```{python}
-df_ache.value_counts("max_phase")
+df_ache.value_counts("max_phase", dropna=False)
 ```
 
 <br>
 
-###### **Dealing with data labelled "NaN"**
+##### **Datasets**
 
-The [definition of "NaN" assigned to max_phase](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/drug-and-compound-questions#what-is-max-phase) indicated that compounds labelled as "NaN" or "null" had no evidence showing they've reached clinical trials, so it would probably (depend on project goals) be the best to remove them from the dataset.
-
-Removing all "NaN" or "null" compounds in max_phase (target y variable) column.
-
-```{python}
-df_ache.dropna(axis="index", subset=["max_phase"], inplace=True)
-```
+The [definition of "NaN" assigned to max_phase](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/drug-and-compound-questions#what-is-max-phase) indicated that compounds labelled as "NaN" or "null" had no evidence showing they've reached clinical trials, so it would probably (depend on project goals) be the best to remove them from the dataset. 
 
 **May remove paragraph below**
 *Check for any "NaNs" in the canonical SMILES column (X variable), since AdaBoostClassifier won't accept missing values in the dataset, but the HistGradientBoostingClassifier() (or the regressor) should take care of the native NaNs. There are other ways to deal with NaNs with a few examples provided by [scikit-learn](https://scikit-learn.org/stable/modules/impute.html). With regards to drug discovery data, there might be more caveats that need to be taken during data preprocessing (I'm also exploring this too). Since this is a simple demonstration only, I'll use the most basic strategy which is removing the whole row of data if any NaN is found within the X or y variables. The downside of this basic way of dealing with missing data is that you may end up losing some potentially useful or valuable data.*
@@ -200,17 +194,16 @@ print(df_ache.shape)
 df_ache.head()
 ```
 
-Dataframe reduced to 734 rows only.
-
-```{python}
-df_ache[["max_phase"]].value_counts()
-```
-
 A max_phase of -1 is assigned with an unknown clinical phase status ([ChEMBL reference](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/drug-and-compound-questions#what-is-max-phase)), which I'm going to drop for this particular experiment.
 
 ```{python}
-# Select only mols with max_phase of 1 and above
-df_ache = df_ache[(df_ache["max_phase"] >= 1)]
+# Fill "NaNs" as "0" first
+df_ache.fillna({"max_phase": 0}, inplace=True)
+```
+
+```{python}
+# Select only mols with max_phase of 0 and above
+df_ache = df_ache[(df_ache["max_phase"] >= 0)]
 ```
 
 ```{python}
@@ -218,11 +211,7 @@ df_ache["max_phase"].describe()
 ```
 
 ```{python}
-df_ache["max_phase"].value_counts()
-```
-
-```{python}
-df_ache.dtypes
+df_ache.value_counts("max_phase", dropna=False)
 ```
 
 ```{python}
@@ -235,20 +224,25 @@ df_ache = df_ache.astype({"max_phase": int})
 df_ache.dtypes
 ```
 
+Please note: the only molecule with max_phase of "0.5" was converted into "0" after I've converted the datatype of max_phase from float to int (I've left it deliberately like this since this is only a sample demonstration on using scikit_learn's pipeline along with scikit_mol, but in reality this should be handled with care i.e. don't change it as different max phase values have different meanings!). Therefore the following value count on max_phase will have 6411 molecules with max_phase "0", rather than the previous number of 6410.
+
+```{python}
+df_ache.value_counts("max_phase", dropna=False)
+```
+
 <br>
 
 ##### **Model building using scikit-learn's pipeline**
 
-Likely model forming steps:
+Model forming steps:
 
-1. Determine whether to use binary or multi-class classification
+###### **Determine classification type**
 
-    Previously used binary classification, e.g. target as max_phase 4 ("1") and used max_phase of "null" as "0".
+Previously binary classification was used, e.g. target as max_phase 4 ("1") and used max_phase of "null" as "0" in my previous posts. This time I'll be using multi-class classification to predict max_phase which contains 0, 1, 2, 3, 4.
 
-    This time likely trying out multi-class classification to predict max_phase which contains 0.5, 1, 2, 3, 4.
+<br>
 
-
-2. Define X, y
+###### **Define X and y variables**
 
 ```{python}
 df_ache
@@ -275,10 +269,11 @@ print(X)
 print(y)
 ```
 
+<br>
 
-3. SMILES sanitisation
+###### **Sanitise SMILES**
 
-    This post is likely going to focus only on Scikit_mol which has a different way to handle SMILES errors. Another useful way to deal with SMILES errors is molpipeline's SMILES error handling, with an example shown in one of its notebooks - https://github.com/basf/MolPipeline/blob/main/notebooks/03_error_handling.ipynb. The main difference from what I could see was that molpipeline takes into account all the invalid SMILES by giving each invalid SMILES a "NaN" label in the pipeline process - this maintains the matrix shape and good for tracking down the problematic SMILES (compounds).
+This post is likely going to focus only on Scikit_mol which has a different way to handle SMILES errors. Another useful way to deal with SMILES errors is molpipeline's SMILES error handling, with an example shown in one of its notebooks - https://github.com/basf/MolPipeline/blob/main/notebooks/03_error_handling.ipynb. The main difference from what I could see was that molpipeline takes into account all the invalid SMILES by giving each invalid SMILES a "NaN" label in the pipeline process - this maintains the matrix shape and good for tracking down the problematic SMILES (compounds).
 
 ```{python}
 checksmi = CheckSmilesSanitazion()
@@ -311,9 +306,11 @@ Generated a list of valid SMILES.
 print(f"{df_ache.canonical_smiles.isna().sum()} out of {len(df_ache)} SMILES failed in conversion")
 ```
 
-4. Data splitting
+<br>
 
-    Randomly splitting data this time.
+###### **Split data**
+
+Randomly splitting data this time.
 
 ```{python}
 # Found a silly error when naming X, y train/test sets!
@@ -321,22 +318,30 @@ print(f"{df_ache.canonical_smiles.isna().sum()} out of {len(df_ache)} SMILES fai
 X_train, X_test, y_train, y_test = train_test_split(X_valid, y, test_size=0.2, random_state=3)
 ```
 
-5. Create a pipeline using scikit-learn
+<br>
 
-    Choosing data features for targets such as fingerprints (e.g. Morgan fingerprints best for larger dataset) or RDKit 2D descriptors (useful for smaller datasets) or others
+##### **Create pipelines**
 
-    *[Useful Jupyter notebook](https://github.com/EBjerrum/scikit-mol/blob/main/notebooks/07_parallel_transforms.ipynb) explaining when to best use parallel calculations to calculate molecular fingerprints and descriptors*
+Create a pipeline using scikit-learn:
 
-    AdaBoost classifier (target: max_phase)
-    (likely not going to use regressor which uses pchembl_value, which is the -log of published activity values e.g. IC50 - [ChEMBL database link](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/chembl-data-questions#what-is-pchembl) that explains this)
+Choosing data features for targets such as fingerprints (e.g. Morgan fingerprints best for larger dataset) or RDKit 2D descriptors (useful for smaller datasets) or others
 
-    Possibly chaining AdaBoostClassifier(), XGBClassifier(), along with Scikit-mol transformers
+*[Useful Jupyter notebook](https://github.com/EBjerrum/scikit-mol/blob/main/notebooks/07_parallel_transforms.ipynb) explaining when to best use parallel calculations to calculate molecular fingerprints and descriptors*
 
-    Links re. building pipeline in scikit-learn:
+<br>
 
-    - [Pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn-pipeline-pipeline)
+###### **AdaBoost classifier**
 
-    - [make_pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline) (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically)
+AdaBoost classifier (target: max_phase)
+(likely not going to use regressor which uses pchembl_value, which is the -log of published activity values e.g. IC50 - [ChEMBL database link](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/chembl-data-questions#what-is-pchembl) that explains this)
+
+Possibly chaining AdaBoostClassifier(), XGBClassifier(), along with Scikit-mol transformers
+
+Links re. building pipeline in scikit-learn:
+
+- [Pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.Pipeline.html#sklearn-pipeline-pipeline)
+
+- [make_pipeline module](https://scikit-learn.org/stable/modules/generated/sklearn.pipeline.make_pipeline.html#sklearn-pipeline-make-pipeline) (simpler pipeline construction, without naming estimators ourselves but rather naming them automatically)
 
 This is also the time to think about generating features for model training. For RDKit 2D descriptors, scikit_mol has a nice way of quickly identifying what are available based on RDKit's [rdkit.Chem.Descriptors module](https://www.rdkit.org/docs/source/rdkit.Chem.Descriptors.html#module-rdkit.Chem.Descriptors) and [rdkit.ML.Descriptors.MoleculeDescriptors module](https://www.rdkit.org/docs/source/rdkit.ML.Descriptors.MoleculeDescriptors.html#rdkit.ML.Descriptors.MoleculeDescriptors.MolecularDescriptorCalculator).
 
@@ -347,10 +352,6 @@ print(f"First 10 descriptor names: {available_descriptors[:10]}")
 ```
 
 Note: can't use all 209 RDKit2D descriptors for AdaBoostClassifier() as some of the descriptors will be "0" and AdaBoostClassifier() won't take care of NaNs, so using a selection of descriptors only (but HistGradientBoostingClassifier() should be able to take into account of NaNs).
-
----Original pipeline---
-
-**30/5/24: Change of plan - build a separate XGBoost classifier pipeline since planning to do a CV to look for optimal parameters. Demo at least showed an AdaBoost classifier model that will work by using either Morgan fingerprints and RDKit 2D descriptors on this tiny dataset of mols**
 
 Here's an example of building a scikit_learn pipeline by using AdaBoostClassifier model, along with scikit_mol's transformers, for multi-class max_phase predictions (training set consists of max_phase 1, 2, 3 and 4).
 
@@ -389,8 +390,6 @@ mlpipe_adaboost = make_pipeline(
 )
 ```
 
-6. Fit the model using the pipeline
-
 ```{python}
 # Check on pipeline
 mlpipe_adaboost
@@ -406,11 +405,13 @@ mlpipe_adaboost.fit(X_train, y_train)
 mlpipe_adaboost.predict(X_test)
 ```
 
-**29/5/24 - Able to use scikit_mol's transformers in scikit_learn's pipeline on AdaBoostClassifer, although there are a long list of RDKit-related error messages! Able to fit and predict on X_train, y_train & X_test data**
+<br>
+
+###### **XGBoost classfier**
 
 The following code snippet is an example of a scikit_learn pipeline using scikit_mol's transformers and XGBClassifier().
 
-```{{python}}
+```{python}
 # Set parameters for xgboost model
 # For multi-class classification, use softprob for loss function
 # https://xgboost.readthedocs.io/en/latest/parameter.html#learning-task-parameters
@@ -446,11 +447,72 @@ mlpipe_xgb = make_pipeline(
 )
 ```
 
-7. Hyperparameter tuning for XGBoost classifier
+```{python}
+mlpipe_xgb
+```
 
-    For XGBoost, one of the main things is to minimise model overfitting where several parameters play important roles to achieve this. For example, *learning_rate* and *subsample* are the first two mentioned previously, and another technique is based on regularisation that includes two other parameters, *reg_alpha* (L1 regularisation based on Manhattan distance) and *reg_lamda* (L2 regularisation based on Euclidean distance), which would penalise XGBoost's model complexity to make it a bit more conservative to reduce overfitting [@bruce2020].
+```{python}
+mlpipe_xgb.fit(X_train, y_train)
+```
 
-    XGBoost contains a long list of parameters and one of the ways to find the most optimal set of parameters is by using **cross-validation**.
+```{python}
+mlpipe_xgb.predict(X_test)
+```
+
+<br>
+
+###### **Model metrics**
+
+```{python}
+from sklearn.metrics import accuracy_score
+
+# Following misclassification score function code borrowed and adapted from:
+# https://scikit-learn.org/stable/auto_examples/ensemble/plot_adaboost_multiclass.html#sphx-glr-auto-examples-ensemble-plot-adaboost-multiclass-py
+
+def misclassification_error(y_true, y_pred):
+    return 1 - accuracy_score(y_true, y_pred)
+
+mlpipe_adaboost_misclassification_error = misclassification_error(
+    y_test, mlpipe_adaboost.fit(X_train, y_train).predict(X_test)
+)
+
+mlpipe_xgb_misclassifiaction_error = misclassification_error(
+    y_test, mlpipe_xgb.fit(X_train, y_train).predict(X_test)
+)
+
+print(f"Training score for mlpipe_adaboost: {mlpipe_adaboost.score(X_train, y_train):0.2f}")
+
+print(f"Testing score for mlpipe_adaboost: {mlpipe_adaboost.score(X_test, y_test):0.2f}")
+
+print(
+    "AdaBoostClassifier's misclassification_error: "
+    f"{mlpipe_adaboost_misclassification_error:0.3f}"
+)
+
+print(f"Training score for mlpipe_adaboost: {mlpipe_xgb.score(X_train, y_train):0.2f}")
+
+print(f"Testing score for mlpipe_adaboost: {mlpipe_xgb.score(X_test, y_test):0.2f}")
+
+print(
+    "XGBClassifier's missclassification_error: "f"{mlpipe_xgb_misclassifiaction_error:0.3f}"
+)
+```
+
+It appeared that XGBoost model obtained a better prediction accuracy than AdaBoost one (although the models were built in a very simple and crude way, but shows the slight difference in performance). The training data being used here is also very imbalanced with a lot of them being max_phase of "0" than "4", and with max_phase "4" being our ultimate aim, the dataset used above is really for demonstration only. Also, since this post is already quite long, I'd rather not make this post into a gigantically tl;dr, so for the imbalanced data discussion and exploration, please refer to my previous posts on [random forest](**add link**) and [random forest classifier](**add link**).
+
+<br>
+
+###### **Hyperparameter tuning for XGBoost classifier**
+
+A full list of XGBoost classifier pipeline parameters can also be retrieved as shown below, which can be further tuned as desired.
+
+```{python}
+mlpipe_xgb.get_params()
+```
+
+For XGBoost, one of the main things is to minimise model overfitting where several parameters play important roles to achieve this. For example, *learning_rate* and *subsample* are the first two mentioned previously, and another technique is based on regularisation that includes two other parameters, *reg_alpha* (L1 regularisation based on Manhattan distance) and *reg_lamda* (L2 regularisation based on Euclidean distance), which would penalise XGBoost's model complexity to make it a bit more conservative to reduce overfitting [@bruce2020].
+
+XGBoost contains a long list of parameters and one of the ways to find the most optimal set of parameters is by using **cross-validation**.
 
 ::: {.callout-note}
 To see the default values or types of each XGBoost parameter, this XGBoost documentation [link](https://xgboost.readthedocs.io/en/latest/parameter.html#xgboost-parameters) is useful (which could be cross-referenced with XGBoost's [Python API reference](https://xgboost.readthedocs.io/en/latest/python/python_api.html#python-api-reference) when needed).
@@ -467,33 +529,10 @@ To see the default values or types of each XGBoost parameter, this XGBoost docum
 # reg_lambda
 
 
-
-
 ```
 
 
-8. Calculate metrics of the model
-
-```{python}
-# Calculate metrics of the model
-
-# Below function code borrowed from this notebook
-# https://github.com/EBjerrum/scikit-mol/blob/main/notebooks/10_pipeline_pandas_output.ipynb
-
-# def compute_metrics(y_true, y_pred):
-#     result = {
-#         "RMSE": mean_squared_error(y_true=y_true, y_pred=y_pred, squared=False),
-#         "MAE": mean_absolute_error(y_true=y_true, y_pred=y_pred),
-#         "R2": r2_score(y_true=y_true, y_pred=y_pred),
-#     }
-#     return result
-
-# performance = compute_metrics(y_true=target_test, y_pred=pred_test)
-# performance
+Ideally, AdaBoost is not as useful as XGBoost [@mlbook2022] in real-life use cases - related to the model cost effectiveness for deployment.
 
 
-```
-
-Ideally, AdaBoost is not as useful as XGBoost [@mlbook2022] in real-life use cases. 
-
-9. ?Pickle to download model and parameters
+?Pickle to download model and parameters
