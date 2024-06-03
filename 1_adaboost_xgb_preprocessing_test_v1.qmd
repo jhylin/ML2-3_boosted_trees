@@ -135,6 +135,7 @@ print(f"xgboost version used: {xgboost.__version__}\nscikit-learn version used: 
 ```
 
 ```{python}
+#| code-fold: true
 # Show Python version used 
 print(sys.version)
 ```
@@ -365,19 +366,19 @@ df_rd_2d.head(3)
 ```{python}
 # Defining X (features) & y (target)
 # Select all RDKit2D descriptors
-X = df_rd_2d.iloc[:, 0:]
+# X = df_rd_2d.iloc[:, 0:]
 # Select max_phase col
-y = df_prep.iloc[]
+# y = df_prep.iloc[]
 ```
 
 
 
 ```{python}
-print(X)
+# print(X)
 ```
 
 ```{python}
-print(y)
+# print(y)
 ```
 
 
@@ -388,7 +389,7 @@ print(y)
 ```{python}
 # X_train, y_train, X_test, y_test = train_test_split(X_valid, y, test_size=0.2, random_state=3)
 
-X_train, y_train, X_test, y_test = train_test_split(X, y, test_size=0.2, random_state=3)
+# X_train, y_train, X_test, y_test = train_test_split(X, y, test_size=0.2, random_state=3)
 ```
 
 5. Create a pipeline using scikit-learn
@@ -411,16 +412,16 @@ X_train, y_train, X_test, y_test = train_test_split(X, y, test_size=0.2, random_
 
 ```{python}
 # Set parameters for adaboost model
-params_adaboost = {
-    "estimator": DecisionTreeClassifier(max_depth = 3), 
-    # default: n_estimators = 50, learning_rate = 1.0 (trade-off between them)
-    "n_estimators": 80, 
-    "learning_rate": 0.2, 
-    # SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) algorithm 
-    # for multi-class classification
-    "algorithm": "SAMME", 
-    "random_state": 2
-    }
+# params_adaboost = {
+#     "estimator": DecisionTreeClassifier(max_depth = 3), 
+#     # default: n_estimators = 50, learning_rate = 1.0 (trade-off between them)
+#     "n_estimators": 80, 
+#     "learning_rate": 0.2, 
+#     # SAMME (Stagewise Additive Modeling using a Multi-class Exponential loss function) algorithm 
+#     # for multi-class classification
+#     "algorithm": "SAMME", 
+#     "random_state": 2
+#     }
 
 # Set parameters for xgboost model
 # For multi-class classification, use softprob for loss function
@@ -435,7 +436,7 @@ params_adaboost = {
 #     }
 
 # Building pipeline
-mlpipe = make_pipeline(
+# mlpipe = make_pipeline(
     # Convert SMILES to RDKit molecules
     #SmilesToMolTransformer(), 
 
@@ -449,16 +450,16 @@ mlpipe = make_pipeline(
     #StandardScaler(),
 
     # Apply adaptive boost classifier
-    AdaBoostClassifier(**params_adaboost)
+    # AdaBoostClassifier(**params_adaboost)
 
     # Try applying xgboost classifier
     #XGBClassifier(**params_xgboost)
-    )
+    # )
 ```
 
 
 ```{python}
-mlpipe
+# mlpipe
 ```
 
 **might have to try my own mol_prep.py preprocessing script - one or more SMILES had problem with ring systems ?during SmilesToMolTransformer() or Standardizer()**
@@ -468,7 +469,7 @@ mlpipe
 
 ```{python}
 # apply the pipeline to training data
-mlpipe.fit(X_train, y_train)
+# mlpipe.fit(X_train, y_train)
 ```
 
 ```{python}
