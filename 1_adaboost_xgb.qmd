@@ -477,21 +477,12 @@ mlpipe_xgb_misclassifiaction_error = misclassification_error(
 )
 
 print(f"Training score for mlpipe_adaboost: {mlpipe_adaboost.score(X_train, y_train):0.2f}")
-
 print(f"Testing score for mlpipe_adaboost: {mlpipe_adaboost.score(X_test, y_test):0.2f}")
-
-print(
-    "AdaBoostClassifier's misclassification_error: "
-    f"{mlpipe_adaboost_misclassification_error:0.3f}"
-)
+print("AdaBoostClassifier's misclassification_error: "f"{mlpipe_adaboost_misclassification_error:0.3f}")
 
 print(f"Training score for mlpipe_adaboost: {mlpipe_xgb.score(X_train, y_train):0.2f}")
-
 print(f"Testing score for mlpipe_adaboost: {mlpipe_xgb.score(X_test, y_test):0.2f}")
-
-print(
-    "XGBClassifier's missclassification_error: "f"{mlpipe_xgb_misclassifiaction_error:0.3f}"
-)
+print("XGBClassifier's missclassification_error: "f"{mlpipe_xgb_misclassifiaction_error:0.3f}")
 ```
 
 It appears that XGBoost model obtained a better prediction accuracy than AdaBoost one (although the models were built in a very simple and crude way, but shows the slight difference in performance). The training data being used here is also very imbalanced with a lot of them being max_phase of "0" than "4", and with max_phase "4" being our ultimate aim, the dataset used above is really for demonstration only. Also, since this post is already quite long, I'd rather not make this post into a gigantically tl;dr, so for the imbalanced data discussion and exploration, please refer to my previous posts on [random forest](**add link**) and [random forest classifier](**add link**).
@@ -532,10 +523,11 @@ params_dist = {
 ```
 
 **Randomised search CV**
+**Use code fold for randomised search CV (not going to use due to long run time and similar result as grid search CV)**
 
 ```{python}
-from sklearn.model_selection import RandomizedSearchCV
-from time import time
+# from sklearn.model_selection import RandomizedSearchCV
+# from time import time
 ```
 
 ```{python}
@@ -595,8 +587,8 @@ grid_search = GridSearchCV(
 )
 
 grid_search.fit(X_train, y_train)
-print(grid_search.best_score_)
-print(grid_search.best_params_)
+print(f"The best cv score found from grid search is: {grid_search.best_score_:0.2f}")
+print(f"The best cv parameter settings found from grid search are: {grid_search.best_params_:0.2f}")
 
 # Run time on 3/6/24 total time taken: 13m 29.4s
 # Fitting 5 folds for each of 9 candidates, totalling 45 fits
@@ -606,5 +598,42 @@ print(grid_search.best_params_)
 
 For tuning parameters of Morgan fingerprints refer to this nice example notebook **add link to scikit_mol's "06_hyperparameter_tuning.ipynb"**
 
+<br>
 
-?Pickle to download model and parameters
+###### **Pickle model**
+
+Pickle model and parameters.
+
+```{python}
+# pickle example 1---
+# import pickle
+## Pickle the model ("pickle save")
+# with open('./results/murcko_scaffs.pkl','wb+') as outf:
+#     pickle.dump(accum,outf)
+## Load model & data into model ("pickle run")
+# with open('./results/murcko_scaffs.pkl','rb') as inf:
+#     accum = pickle.load(inf)
+
+
+# pickle example 2---
+## The sklearn API models are picklable
+# print("Pickling sklearn API models")
+## must open in binary format to pickle ("pickle save")
+# pickle.dump(clf, open("best_calif.pkl", "wb"))
+## ("pickle run")
+# clf2 = pickle.load(open("best_calif.pkl", "rb"))
+## Check the pickled model is the same as the original model 
+## ref. for np.allclose - https://numpy.org/doc/stable/reference/generated/numpy.allclose.html#numpy-allclose
+# print(np.allclose(clf.predict(X), clf2.predict(X)))
+
+
+# pickle example 3---
+## alternatively, you can pickle the booster ("pickle save")
+# pks = pickle.dumps(bst2)
+## load model and data in ("pickle run")
+# bst3 = pickle.loads(pks)
+# preds3 = bst3.predict(dtest2)
+## To check if the pickled model was same as the original model
+## assert they are the same
+# assert np.sum(np.abs(preds3 - preds)) == 0
+```
