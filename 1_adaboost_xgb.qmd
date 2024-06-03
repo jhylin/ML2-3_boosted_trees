@@ -519,38 +519,10 @@ To obtain only the parameter names for ease of tuning.
 mlpipe_xgb.get_params().keys()
 ```
 
-```{python}
-from sklearn.model_selection import RandomizedSearchCV
-from time import time
-
-# Trying to tune XGBClassifier & Morgan fingerpint parameters
-
-# Borrowing a utility function code from scikit_learn documentation to report best scores
-# Source: https://scikit-learn.org/stable/auto_examples/model_selection/plot_randomized_search.html#sphx-glr-auto-examples-model-selection-plot-randomized-search-py
-# def report(results, n_top=3):
-#     for i in range(1, n_top + 1):
-#         candidates = np.flatnonzero(results["rank_test_score"] == i)
-#         for candidate in candidates:
-#             print("Model with rank: {0}".format(i))
-#             print(
-#                 "Mean validation score: {0:.3f} (std: {1:.3f})".format(
-#                     results["mean_test_score"][candidate],
-#                     results["std_test_score"][candidate],
-#                 )
-#             )
-#             print("Parameters: {0}".format(results["params"][candidate]))
-#             print("")
-```
+Some of the main XGBoost parameters that can be tuned are n_estimators, max_depth, learning_rate, subsample and reg_lambda. Here, I'm going to try to look for the best combination of learning_rate and subsample for a XGBoost classifier model.
 
 ```{python}
-#XGBoost parameters
-# n_estimators
-# max_depth
-# learning_rate
-# subsample
-# reg_lambda
-
-# Parameters and their distributions to be sampled from
+# Parameters and distributions to be sampled
 params_dist = {
     # learning_rate usually between 0.01 - 0.1 as suggested by Raschka et al. Default is between 0 and 1
     "xgbclassifier__learning_rate": [0.05, 0.1, 0.3], 
@@ -559,37 +531,80 @@ params_dist = {
 }
 ```
 
+**Randomised search CV**
+
 ```{python}
-# Umm... should've built a smaller pipeline... it's taking > 10 mins to do CV
-
-#n_iter_search = 20
-
-# random_search = RandomizedSearchCV(
-#     mlpipe_xgb, 
-#     param_distributions=params_dist
-#     #n_iter=n_iter_search
-# )
-
-# t_start = time()
-# random_search.fit(X_train, y_train)
-# t_finish = time()
-
-# print(
-#     "RandomizedSearchCV took %.2f seconds for candidates parameter settings."
-#     % ((t_finish - t_start))
-# )
-
-# print(f'Runtime: {t1-t0:0.2F} for {n_iter_search} iterations')
+from sklearn.model_selection import RandomizedSearchCV
+from time import time
 ```
 
+```{python}
+# Borrowing a utility function code from scikit_learn documentation to report best scores
+# Source: https://scikit-learn.org/stable/auto_examples/model_selection/plot_randomized_search.html#sphx-glr-auto-examples-model-selection-plot-randomized-search-py
+def report(results, n_top=3):
+    for i in range(1, n_top + 1):
+        candidates = np.flatnonzero(results["rank_test_score"] == i)
+        for candidate in candidates:
+            print("Model with rank: {0}".format(i))
+            print(
+                "Mean validation score: {0:.3f} (std: {1:.3f})".format(
+                    results["mean_test_score"][candidate],
+                    results["std_test_score"][candidate],
+                )
+            )
+            print("Parameters: {0}".format(results["params"][candidate]))
+            print("")
+```
 
 ```{python}
-# Using grid search CV instead
+# Randomised search CV
+n_iter_search = 9
+
+random_search = RandomizedSearchCV(
+    mlpipe_xgb, 
+    param_distributions=params_dist,
+    n_iter=n_iter_search,
+    n_jobs=2
+)
+
+t_start = time()
+random_search.fit(X_train, y_train)
+t_finish = time()
+
+print(f'Runtime: {t_finish-t_start:0.2F} seconds for {n_iter_search} iterations')
+
+# Run time on 3/6/24 total time taken: 13m 33.2s
+```
+
+```{python}
+# run report function code
+report(random_search.cv_results_)
+```
+
+**Grid search CV**
+
+```{python}
+# Using grid search CV
 from sklearn.model_selection import GridSearchCV
 
+grid_search = GridSearchCV(
+    mlpipe_xgb,
+    param_grid=params_dist,
+    verbose=1,
+    n_jobs=2
+)
 
+grid_search.fit(X_train, y_train)
+print(grid_search.best_score_)
+print(grid_search.best_params_)
 
+# Run time on 3/6/24 total time taken: 13m 29.4s
+# Fitting 5 folds for each of 9 candidates, totalling 45 fits
+#0.9885159010600708
+# {'xgbclassifier__learning_rate': 0.3, 'xgbclassifier__subsample': 0.7}
 ```
+
+For tuning parameters of Morgan fingerprints refer to this nice example notebook **add link to scikit_mol's "06_hyperparameter_tuning.ipynb"**
 
 Ideally, AdaBoost is not as useful as XGBoost [@mlbook2022] in real-life use cases - related to the model cost effectiveness for deployment.
 
