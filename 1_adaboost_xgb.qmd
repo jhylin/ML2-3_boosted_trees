@@ -2,7 +2,7 @@
 title: "Boosted trees"
 subtitle: "Series 2.3.1 - AdaBoost, XGBoost and Scikit-mol"
 author: Jennifer HY Lin
-date: '2024-5-31'
+date: '2024-6-3'
 draft: true
 categories: 
     - Machine learning projects
@@ -217,7 +217,7 @@ df_ache.value_counts("max_phase", dropna=False)
 ```{python}
 # Convert max_phase from float to int for the ease of reading predicted outcomes,
 # otherwise it'll look like "4., 2., 4., ..."
-df_ache = df_ache.astype({"max_phase": int})
+df_ache = df_ache.astype({"max_phase": int, "canonical_smiles": "string"})
 ```
 
 ```{python}
@@ -234,11 +234,7 @@ df_ache.value_counts("max_phase", dropna=False)
 
 ##### **Model building using scikit-learn's pipeline**
 
-Model forming steps:
-
-###### **Determine classification type**
-
-Previously binary classification was used, e.g. target as max_phase 4 ("1") and used max_phase of "null" as "0" in my previous posts. This time I'll be using multi-class classification to predict max_phase which contains 0, 1, 2, 3, 4.
+Binary classification has been used in my previous posts, e.g. target as max_phase 4 (re-labelled as "1") with training set of max_phase "null" re-labelled as "0". This time I'll be using multi-class classification to predict max_phase of the training set of molecules containing 0, 1, 2, 3, 4.
 
 <br>
 
@@ -413,7 +409,7 @@ The following code snippet is an example of a scikit_learn pipeline using scikit
 
 ```{python}
 # Set parameters for xgboost model
-# For multi-class classification, use softprob for loss function
+# For multi-class classification, use softprob for loss function (learning task parameters)
 # https://xgboost.readthedocs.io/en/latest/parameter.html#learning-task-parameters
 params_xgboost = {
     "n_estimators": 100,
@@ -504,23 +500,49 @@ It appeared that XGBoost model obtained a better prediction accuracy than AdaBoo
 
 ###### **Hyperparameter tuning for XGBoost classifier**
 
-A full list of XGBoost classifier pipeline parameters can also be retrieved as shown below, which can be further tuned as desired.
+For XGBoost, one of the main things is to minimise model overfitting where several parameters play important roles to achieve this. For example, *learning_rate* and *subsample* are the first two mentioned previously, and another technique is based on regularisation that includes two other parameters, *reg_alpha* (L1 regularisation based on Manhattan distance) and *reg_lamda* (L2 regularisation based on Euclidean distance), which would penalise XGBoost's model complexity to make it a bit more conservative to reduce overfitting [@bruce2020].
+
+A full list of XGBoost classifier pipeline parameters and settings used can be retrieved as shown below. It contains a *long* list of parameters and one of the ways to find the most optimal set of parameters is by using *cross-validation*.
 
 ```{python}
 mlpipe_xgb.get_params()
 ```
 
-For XGBoost, one of the main things is to minimise model overfitting where several parameters play important roles to achieve this. For example, *learning_rate* and *subsample* are the first two mentioned previously, and another technique is based on regularisation that includes two other parameters, *reg_alpha* (L1 regularisation based on Manhattan distance) and *reg_lamda* (L2 regularisation based on Euclidean distance), which would penalise XGBoost's model complexity to make it a bit more conservative to reduce overfitting [@bruce2020].
-
-XGBoost contains a long list of parameters and one of the ways to find the most optimal set of parameters is by using **cross-validation**.
-
 ::: {.callout-note}
 To see the default values or types of each XGBoost parameter, this XGBoost documentation [link](https://xgboost.readthedocs.io/en/latest/parameter.html#xgboost-parameters) is useful (which could be cross-referenced with XGBoost's [Python API reference](https://xgboost.readthedocs.io/en/latest/python/python_api.html#python-api-reference) when needed).
 :::
 
-```{python}
-# Hyperparameter tuning - searching for most optimal set of parameters to minimise errors
+To obtain only the parameter names for ease of tuning.
 
+```{python}
+# Get parameter names only to tune
+mlpipe_xgb.get_params().keys()
+```
+
+```{python}
+from sklearn.model_selection import RandomizedSearchCV
+from time import time
+
+# Trying to tune XGBClassifier & Morgan fingerpint parameters
+
+# Borrowing a utility function code from scikit_learn documentation to report best scores
+# Source: https://scikit-learn.org/stable/auto_examples/model_selection/plot_randomized_search.html#sphx-glr-auto-examples-model-selection-plot-randomized-search-py
+# def report(results, n_top=3):
+#     for i in range(1, n_top + 1):
+#         candidates = np.flatnonzero(results["rank_test_score"] == i)
+#         for candidate in candidates:
+#             print("Model with rank: {0}".format(i))
+#             print(
+#                 "Mean validation score: {0:.3f} (std: {1:.3f})".format(
+#                     results["mean_test_score"][candidate],
+#                     results["std_test_score"][candidate],
+#                 )
+#             )
+#             print("Parameters: {0}".format(results["params"][candidate]))
+#             print("")
+```
+
+```{python}
 #XGBoost parameters
 # n_estimators
 # max_depth
@@ -528,9 +550,46 @@ To see the default values or types of each XGBoost parameter, this XGBoost docum
 # subsample
 # reg_lambda
 
-
+# Parameters and their distributions to be sampled from
+params_dist = {
+    # learning_rate usually between 0.01 - 0.1 as suggested by Raschka et al. Default is between 0 and 1
+    "xgbclassifier__learning_rate": [0.05, 0.1, 0.3], 
+    # subsample default is between 0 and 1
+    "xgbclassifier__subsample": [0.5, 0.7, 1.0]
+}
 ```
 
+```{python}
+# Umm... should've built a smaller pipeline... it's taking > 10 mins to do CV
+
+#n_iter_search = 20
+
+# random_search = RandomizedSearchCV(
+#     mlpipe_xgb, 
+#     param_distributions=params_dist
+#     #n_iter=n_iter_search
+# )
+
+# t_start = time()
+# random_search.fit(X_train, y_train)
+# t_finish = time()
+
+# print(
+#     "RandomizedSearchCV took %.2f seconds for candidates parameter settings."
+#     % ((t_finish - t_start))
+# )
+
+# print(f'Runtime: {t1-t0:0.2F} for {n_iter_search} iterations')
+```
+
+
+```{python}
+# Using grid search CV instead
+from sklearn.model_selection import GridSearchCV
+
+
+
+```
 
 Ideally, AdaBoost is not as useful as XGBoost [@mlbook2022] in real-life use cases - related to the model cost effectiveness for deployment.
 
