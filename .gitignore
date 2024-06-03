@@ -7,6 +7,9 @@ plot_adaboost_regression.ipynb
 mol_prep.py
 1_adaboost_xgb.html
 1_adaboost_xgb_files
+plot_adaboost_multiclass.ipynb
+xgb_gridsearch_sklearn_examples.ipynb
+xgb_sklearn_parallel.ipynb
 
 
 # Byte-compiled / optimized / DLL files
