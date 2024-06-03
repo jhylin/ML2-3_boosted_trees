@@ -494,7 +494,7 @@ print(
 )
 ```
 
-It appeared that XGBoost model obtained a better prediction accuracy than AdaBoost one (although the models were built in a very simple and crude way, but shows the slight difference in performance). The training data being used here is also very imbalanced with a lot of them being max_phase of "0" than "4", and with max_phase "4" being our ultimate aim, the dataset used above is really for demonstration only. Also, since this post is already quite long, I'd rather not make this post into a gigantically tl;dr, so for the imbalanced data discussion and exploration, please refer to my previous posts on [random forest](**add link**) and [random forest classifier](**add link**).
+It appears that XGBoost model obtained a better prediction accuracy than AdaBoost one (although the models were built in a very simple and crude way, but shows the slight difference in performance). The training data being used here is also very imbalanced with a lot of them being max_phase of "0" than "4", and with max_phase "4" being our ultimate aim, the dataset used above is really for demonstration only. Also, since this post is already quite long, I'd rather not make this post into a gigantically tl;dr, so for the imbalanced data discussion and exploration, please refer to my previous posts on [random forest](**add link**) and [random forest classifier](**add link**).
 
 <br>
 
@@ -541,44 +541,44 @@ from time import time
 ```{python}
 # Borrowing a utility function code from scikit_learn documentation to report best scores
 # Source: https://scikit-learn.org/stable/auto_examples/model_selection/plot_randomized_search.html#sphx-glr-auto-examples-model-selection-plot-randomized-search-py
-def report(results, n_top=3):
-    for i in range(1, n_top + 1):
-        candidates = np.flatnonzero(results["rank_test_score"] == i)
-        for candidate in candidates:
-            print("Model with rank: {0}".format(i))
-            print(
-                "Mean validation score: {0:.3f} (std: {1:.3f})".format(
-                    results["mean_test_score"][candidate],
-                    results["std_test_score"][candidate],
-                )
-            )
-            print("Parameters: {0}".format(results["params"][candidate]))
-            print("")
+# def report(results, n_top=3):
+#     for i in range(1, n_top + 1):
+#         candidates = np.flatnonzero(results["rank_test_score"] == i)
+#         for candidate in candidates:
+#             print("Model with rank: {0}".format(i))
+#             print(
+#                 "Mean validation score: {0:.3f} (std: {1:.3f})".format(
+#                     results["mean_test_score"][candidate],
+#                     results["std_test_score"][candidate],
+#                 )
+#             )
+#             print("Parameters: {0}".format(results["params"][candidate]))
+#             print("")
 ```
 
 ```{python}
 # Randomised search CV
-n_iter_search = 9
+# n_iter_search = 9
 
-random_search = RandomizedSearchCV(
-    mlpipe_xgb, 
-    param_distributions=params_dist,
-    n_iter=n_iter_search,
-    n_jobs=2
-)
+# random_search = RandomizedSearchCV(
+#     mlpipe_xgb, 
+#     param_distributions=params_dist,
+#     n_iter=n_iter_search,
+#     n_jobs=2
+# )
 
-t_start = time()
-random_search.fit(X_train, y_train)
-t_finish = time()
+# t_start = time()
+# random_search.fit(X_train, y_train)
+# t_finish = time()
 
-print(f'Runtime: {t_finish-t_start:0.2F} seconds for {n_iter_search} iterations')
+# print(f'Runtime: {t_finish-t_start:0.2F} seconds for {n_iter_search} iterations')
 
 # Run time on 3/6/24 total time taken: 13m 33.2s
 ```
 
 ```{python}
 # run report function code
-report(random_search.cv_results_)
+# report(random_search.cv_results_)
 ```
 
 **Grid search CV**
@@ -605,8 +605,6 @@ print(grid_search.best_params_)
 ```
 
 For tuning parameters of Morgan fingerprints refer to this nice example notebook **add link to scikit_mol's "06_hyperparameter_tuning.ipynb"**
-
-Ideally, AdaBoost is not as useful as XGBoost [@mlbook2022] in real-life use cases - related to the model cost effectiveness for deployment.
 
 
 ?Pickle to download model and parameters
