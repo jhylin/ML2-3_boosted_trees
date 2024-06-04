@@ -103,7 +103,6 @@ import sys
 import pandas as pd
 import numpy as np
 import chembl_downloader
-
 from rdkit import Chem
 
 # Import Scikit_mol
@@ -130,7 +129,9 @@ from sklearn.ensemble import AdaBoostClassifier
 import xgboost
 from xgboost import XGBClassifier
 
-print(f"xgboost version used: {xgboost.__version__}\nscikit-learn version used: {sklearn.__version__}")
+print(f"xgboost version used: {xgboost.__version__}")
+print(f"scikit-learn version used: {sklearn.__version__}")
+print(f"rdkit version used: {rdkit.__version__}")
 ```
 
 ```{python}
@@ -184,17 +185,9 @@ df_ache.value_counts("max_phase", dropna=False)
 
 ##### **Datasets**
 
-The [definition of "NaN" assigned to max_phase](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/drug-and-compound-questions#what-is-max-phase) indicated that compounds labelled as "NaN" or "null" had no evidence showing they've reached clinical trials, so it would probably (depend on project goals) be the best to remove them from the dataset. 
+The [definition of "NaN" assigned to max_phase](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/drug-and-compound-questions#what-is-max-phase) indicates that compounds labelled as "NaN" or "null" have no evidence of showing they've reached clinical trials, so I'm removing them from the dataset(this can also be included in the dataset depending on project goals). 
 
-**May remove paragraph below**
-*Check for any "NaNs" in the canonical SMILES column (X variable), since AdaBoostClassifier won't accept missing values in the dataset, but the HistGradientBoostingClassifier() (or the regressor) should take care of the native NaNs. There are other ways to deal with NaNs with a few examples provided by [scikit-learn](https://scikit-learn.org/stable/modules/impute.html). With regards to drug discovery data, there might be more caveats that need to be taken during data preprocessing (I'm also exploring this too). Since this is a simple demonstration only, I'll use the most basic strategy which is removing the whole row of data if any NaN is found within the X or y variables. The downside of this basic way of dealing with missing data is that you may end up losing some potentially useful or valuable data.*
-
-```{python}
-print(df_ache.shape)
-df_ache.head()
-```
-
-A max_phase of -1 is assigned with an unknown clinical phase status ([ChEMBL reference](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/drug-and-compound-questions#what-is-max-phase)), which I'm going to drop for this particular experiment.
+A max_phase of -1 is assigned to molecules with unknown clinical phase status ([ChEMBL reference](https://chembl.gitbook.io/chembl-interface-documentation/frequently-asked-questions/drug-and-compound-questions#what-is-max-phase)), so I'm also going to drop them for this particular experiment.
 
 ```{python}
 # Fill "NaNs" as "0" first
@@ -224,7 +217,7 @@ df_ache = df_ache.astype({"max_phase": int, "canonical_smiles": "string"})
 df_ache.dtypes
 ```
 
-Please note: the only molecule with max_phase of "0.5" was converted into "0" after I've converted the datatype of max_phase from float to int (I've left it deliberately like this since this is only a sample demonstration on using scikit_learn's pipeline along with scikit_mol, but in reality this should be handled with care i.e. don't change it as different max phase values have different meanings!). Therefore the following value count on max_phase will have 6411 molecules with max_phase "0", rather than the previous number of 6410.
+Please note: the only molecule with max_phase of "0.5" was converted into "0" after I've converted the datatype of max_phase from float to integer (I've left it deliberately like this since this is only a demonstration on using scikit_learn's pipeline along with scikit_mol, but in reality this should be handled with care i.e. don't discard it as different max phase values have different meanings!). Therefore the following max_phase value count will have 6411 molecules with max_phase "0", rather than the previous number of 6410.
 
 ```{python}
 df_ache.value_counts("max_phase", dropna=False)
@@ -234,13 +227,14 @@ df_ache.value_counts("max_phase", dropna=False)
 
 ##### **Model building using scikit-learn's pipeline**
 
-Binary classification has been used in my previous posts, e.g. target as max_phase 4 (re-labelled as "1") with training set of max_phase "null" re-labelled as "0". This time I'll be using multi-class classification to predict max_phase of the training set of molecules containing 0, 1, 2, 3, 4.
+Binary classification has been used in my previous posts, e.g. target as max_phase 4 (re-labelled as "1") with training set of max_phase "null" re-labelled as "0" with their different RDKit molecular features. This time I'll be using multi-class classification to predict a training set of molecules containing max_phase of 0, 1, 2, 3 and 4.
 
 <br>
 
 ###### **Define X and y variables**
 
 ```{python}
+# A sanity check and view on the original dataset 
 df_ache
 ```
 
@@ -269,15 +263,15 @@ print(y)
 
 ###### **Sanitise SMILES**
 
-This post is likely going to focus only on Scikit_mol which has a different way to handle SMILES errors. Another useful way to deal with SMILES errors is molpipeline's SMILES error handling, with an example shown in one of its notebooks - https://github.com/basf/MolPipeline/blob/main/notebooks/03_error_handling.ipynb. The main difference from what I could see was that molpipeline takes into account all the invalid SMILES by giving each invalid SMILES a "NaN" label in the pipeline process - this maintains the matrix shape and good for tracking down the problematic SMILES (compounds).
+This post is going to focus only on Scikit_mol which has a different way to handle SMILES errors. Another useful way to deal with SMILES errors is [Molpipeline](https://github.com/basf/MolPipeline)'s SMILES error handling, with an example shown in one of [its notebooks](https://github.com/basf/MolPipeline/blob/main/notebooks/03_error_handling.ipynb). The main difference from what I could see, even though I haven't got to use molpipeline yet, was that molpipeline takes into account of all the invalid SMILES by giving each invalid SMILES a "NaN" label in the pipeline process - this maintains the matrix shape and good for tracking down the problematic SMILES (molecules).
 
 ```{python}
 checksmi = CheckSmilesSanitazion()
-# Checking on SMILES (X) only 
+# Checking on SMILES (X) 
 X_valid, X_errors = checksmi.sanitize(X)
 ```
 
-Ideally will be using X_valid & y_valid for further work (but this also means removing the invalids or errors completely from the training dataset). Another similar package, molpipeline - https://github.com/basf/MolPipeline might be of some use here, where its special feature is handling errors within the pipeline.
+Ideally, X_valid & y_valid will be used for further work, meaning all the invalids or errors will be removed from the training set.
 
 ```{python}
 checksmi.errors
@@ -297,10 +291,13 @@ print(X_valid)
 
 Generated a list of valid SMILES.
 
+Also, manually checking for any "NaNs" in the canonical SMILES column (X variable), since AdaBoostClassifier won't accept missing values in the dataset, but if using HistGradientBoostingClassifier() instead, it should take care of the native NaNs.
+
 ```{python}
-# Check if there's any NaNs in canonical_smiles column
 print(f"{df_ache.canonical_smiles.isna().sum()} out of {len(df_ache)} SMILES failed in conversion")
 ```
+
+There are other ways to deal with NaNs with a few examples provided by [scikit-learn](https://scikit-learn.org/stable/modules/impute.html). However, with regards to drug discovery data, there might be more caveats that need to be taken during data preprocessing (I'm also still exploring this too). 
 
 <br>
 
@@ -310,7 +307,8 @@ Randomly splitting data this time.
 
 ```{python}
 # Found a silly error when naming X, y train/test sets!
-# X_train, X_test, y_train, y_test
+# Remember to name them in this order: X_train, X_test, y_train, y_test
+# otherwise model fitting won't work...
 X_train, X_test, y_train, y_test = train_test_split(X_valid, y, test_size=0.2, random_state=3)
 ```
 
@@ -318,11 +316,11 @@ X_train, X_test, y_train, y_test = train_test_split(X_valid, y, test_size=0.2, r
 
 ##### **Create pipelines**
 
-Create a pipeline using scikit-learn:
+Create a pipeline using *scikit-learn*:
 
-Choosing data features for targets such as fingerprints (e.g. Morgan fingerprints best for larger dataset) or RDKit 2D descriptors (useful for smaller datasets) or others
+- Choosing data features for targets such as fingerprints (e.g. Morgan fingerprints best for larger dataset) or RDKit 2D descriptors (useful for smaller datasets) or others 
 
-*[Useful Jupyter notebook](https://github.com/EBjerrum/scikit-mol/blob/main/notebooks/07_parallel_transforms.ipynb) explaining when to best use parallel calculations to calculate molecular fingerprints and descriptors*
+- [Useful notebook](https://github.com/EBjerrum/scikit-mol/blob/main/notebooks/07_parallel_transforms.ipynb) explaining when is the best to run parallel calculations to calculate molecular fingerprints and descriptors
 
 <br>
 
