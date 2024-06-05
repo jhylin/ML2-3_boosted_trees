@@ -12,7 +12,7 @@ xgb_gridsearch_sklearn_examples.ipynb
 xgb_sklearn_parallel.ipynb
 1_adaboost_xgb_preprocessing_test_v1.html
 1_adaboost_xgb_preprocessing_test_v1_files
-
+xgb_pipeline.pkl
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
