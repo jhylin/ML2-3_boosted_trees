@@ -17,6 +17,8 @@ format: html
 bibliography: references.bib
 ---
 
+**Notebook to be updated - new change 2nd April 2025 - class name has been renamed in scikit_mol: CheckSmilesSanitazion -> CheckSmilesSanitization**
+
 ##### **Some introductions**
 
 I've somehow promised myself to do a tree series on machine learning and glad I've made it to the boosted trees part (it took a while...). This is also likely my last post on this topic for now as there are other things I want to explore in the near future. Hopefully this is somewhat useful for anyone who's new to this.
@@ -109,6 +111,8 @@ import pickle
 
 # Import Scikit_mol
 ## Check and clean SMILES
+# *New change 2nd April 2025* - Class name has been renamed in package
+# new name: CheckSmilesSanitization
 from scikit_mol.utilities import CheckSmilesSanitazion
 ## Standardise molecules
 from scikit_mol.standardizer import Standardizer
@@ -268,6 +272,9 @@ print(y)
 This post is going to focus on Scikit_mol which has a manual way to handle SMILES errors, as shown in the code below. Another useful way to deal with SMILES errors is [Molpipeline](https://github.com/basf/MolPipeline)'s SMILES error handling, with an example shown in one of [its notebooks](https://github.com/basf/MolPipeline/blob/main/notebooks/03_error_handling.ipynb). The main difference from what I can see, even though I haven't got to use it yet, is that Molpipeline takes into account of all the invalid SMILES by giving each invalid SMILES a "NaN" label in the pipeline process - this maintains the matrix shape and good for tracking down the problematic SMILES (molecules).
 
 ```{python}
+# *New change 2nd April 2025* - Class name has been renamed in package
+# new name: CheckSmilesSanitization
+
 checksmi = CheckSmilesSanitazion()
 # Checking on SMILES (X) 
 X_valid, X_errors = checksmi.sanitize(X)
